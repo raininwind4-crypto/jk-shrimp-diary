@@ -17,7 +17,10 @@ def search_duckduckgo(keywords, max_results=10):
     """Search using DuckDuckGo."""
     results = []
     try:
-        from duckduckgo_search import DDGS
+        try:
+            from ddgs import DDGS
+        except ImportError:
+            from duckduckgo_search import DDGS
         with DDGS() as ddgs:
             for kw in keywords:
                 try:
@@ -191,7 +194,8 @@ def update_articles_html(hotspots, date_str):
 
 
 def save_hotspots_json(hotspots, date_str):
-    """Save hotspots as JSON."""
+    """Save hotspots as JSON (latest + daily archive)."""
+    # Save latest
     json_path = os.path.join(SITE_DIR, "hotspots-latest.json")
     data = {
         "date": date_str,
@@ -202,6 +206,30 @@ def save_hotspots_json(hotspots, date_str):
     with open(json_path, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
     print(f"[ok] hotspots-latest.json saved")
+
+    # Save daily archive
+    archive_dir = os.path.join(SITE_DIR, "hotspots-archive")
+    os.makedirs(archive_dir, exist_ok=True)
+    archive_path = os.path.join(archive_dir, f"hotspots-{date_str}.json")
+    with open(archive_path, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+    print(f"[ok] archived to hotspots-archive/hotspots-{date_str}.json")
+
+    # Update index of all archived dates
+    update_archive_index(archive_dir)
+
+
+def update_archive_index(archive_dir):
+    """Generate hotspots-archive/index.json listing all available dates."""
+    dates = []
+    for fname in sorted(os.listdir(archive_dir), reverse=True):
+        if fname.startswith("hotspots-") and fname.endswith(".json") and fname != "index.json":
+            date = fname.replace("hotspots-", "").replace(".json", "")
+            dates.append(date)
+    index_path = os.path.join(archive_dir, "index.json")
+    with open(index_path, "w", encoding="utf-8") as f:
+        json.dump({"dates": dates}, f, ensure_ascii=False, indent=2)
+    print(f"[ok] archive index updated: {len(dates)} dates")
 
 
 def main():

@@ -48,16 +48,23 @@ def update_diary_html(day_num):
         content
     )
 
-    # Update progress bar
+    # Update progress bar text
     progress_pct = round(day_num / 365 * 100, 2)
     content = re.sub(
         r'Day \d{3} / 365',
         f'Day {day_str} / 365',
         content
     )
+    # Update inline style width on progress-fill div
     content = re.sub(
-        r'width: [\d.]+%',
-        f'width: {progress_pct}%',
+        r'(style="width:) [\d.]+(%;")',
+        f'\\g<1> {progress_pct}\\2',
+        content
+    )
+    # Update .progress-fill CSS width
+    content = re.sub(
+        r'(\.progress-fill\s*\{[^}]*?width:)\s*[\d.]+(%)',
+        lambda m: f'{m.group(1)} {progress_pct}{m.group(2)}',
         content
     )
 

@@ -484,6 +484,75 @@ section {
   box-shadow: 0 0 6px rgba(126, 87, 194, 0.4);
 }
 
+/* ===== Date Navigator ===== */
+.date-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+}
+.date-nav-btn {
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.4rem 1rem;
+  border: 1px solid var(--border-default);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.date-nav-btn:hover {
+  border-color: var(--border-hover);
+  color: var(--text-secondary);
+  background: var(--bg-card-hover);
+}
+.date-nav-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.date-nav-btn.today-btn {
+  background: var(--accent-orange);
+  border-color: var(--accent-orange);
+  color: #FFFFFF;
+}
+.date-nav-btn.today-btn:hover {
+  background: var(--accent-coral);
+  border-color: var(--accent-coral);
+}
+.date-nav-select {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  padding: 0.4rem 0.8rem;
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.3s;
+}
+.date-nav-select:focus {
+  border-color: var(--accent-orange);
+}
+.date-nav-label {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  letter-spacing: 0.5px;
+}
+.loading-indicator {
+  display: none;
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  text-align: center;
+  padding: 2rem;
+}
+.loading-indicator.active { display: block; }
+
 /* ===== Footer ===== */
 #footer {
   text-align: center;
@@ -568,126 +637,134 @@ section {
 
 <!-- Today's Hotspots -->
 <div class="fade-in" id="hotspot-section">
-  <div class="date-header"><span class="date-dot dot-orange"></span> 2026-03-06 热点</div>
+  <div class="date-header"><span class="date-dot dot-orange"></span> <span id="hotspot-date-label">2026-03-06</span> 热点</div>
+  <div class="date-nav" id="date-nav">
+    <button class="date-nav-btn" id="btn-prev" title="前一天">&larr; 前一天</button>
+    <select class="date-nav-select" id="date-select"></select>
+    <button class="date-nav-btn" id="btn-next" title="后一天">后一天 &rarr;</button>
+    <button class="date-nav-btn today-btn" id="btn-today">今天</button>
+    <span class="date-nav-label" id="archive-count"></span>
+  </div>
+  <div class="loading-indicator" id="loading">加载中...</div>
   <div class="hotspot-grid" id="hotspot-grid">
 
     <div class="hotspot-card heat-10" data-cat="analysis">
       <div class="heat-badge score-10">&#x1F525; 10</div>
-      <h3 class="hotspot-title">OpenAI修改五角大楼AI协议引争议</h3>
-      <p class="hotspot-summary">OpenAI修改与美国国防部合作条款，碳排放和AI军事化应用持续引发社会讨论。BBC、纽约时报等全球媒体关注。</p>
+      <h3 class="hotspot-title">2026年全球AI发展新趋势：人人都能看懂的AI未来报告</h3>
+      <p class="hotspot-summary"></p>
       <div class="hotspot-meta">
         <span class="hotspot-category cat-analysis">深度分析</span>
-        <span class="hotspot-source">NYT/BBC</span>
-      </div>
-    </div>
-
-    <div class="hotspot-card heat-10" data-cat="analysis">
-      <div class="heat-badge score-10">&#x1F525; 10</div>
-      <h3 class="hotspot-title">ChatGPT vs Claude碳足迹大比拼</h3>
-      <p class="hotspot-summary">Anthropic拒绝军事合作后声誉大涨，研究对比两大AI模型的能源消耗和碳排放数据差异。</p>
-      <div class="hotspot-meta">
-        <span class="hotspot-category cat-analysis">深度分析</span>
-        <span class="hotspot-source">CarbonCredits</span>
+        <span class="hotspot-source">腾讯网</span>
       </div>
     </div>
 
     <div class="hotspot-card heat-10" data-cat="hotspot">
       <div class="heat-badge score-10">&#x1F525; 10</div>
-      <h3 class="hotspot-title">GPT-5.4泄露：Codex演示中曝光</h3>
-      <p class="hotspot-summary">OpenAI在Codex演示中意外泄露GPT-5.4模型编号，GPT-5.3刚上线就有继任者，引发发布时间猜测。</p>
+      <h3 class="hotspot-title">Anthropic官宣「封杀」OpenAI!GPT-5发布在</h3>
+      <p class="hotspot-summary"></p>
       <div class="hotspot-meta">
         <span class="hotspot-category cat-hotspot">热点快讯</span>
-        <span class="hotspot-source">Geeky Gadgets</span>
+        <span class="hotspot-source">新浪网</span>
+      </div>
+    </div>
+
+    <div class="hotspot-card heat-10" data-cat="hotspot">
+      <div class="heat-badge score-10">&#x1F525; 10</div>
+      <h3 class="hotspot-title">实测 GPT-5.3-Codex，OpenAI 史上第一个高</h3>
+      <p class="hotspot-summary"></p>
+      <div class="hotspot-meta">
+        <span class="hotspot-category cat-hotspot">热点快讯</span>
+        <span class="hotspot-source">爱范儿</span>
+      </div>
+    </div>
+
+    <div class="hotspot-card heat-10" data-cat="hotspot">
+      <div class="heat-badge score-10">&#x1F525; 10</div>
+      <h3 class="hotspot-title">GPT-5发布在即：OpenAI被控违反服务条款，Claud</h3>
+      <p class="hotspot-summary"></p>
+      <div class="hotspot-meta">
+        <span class="hotspot-category cat-hotspot">热点快讯</span>
+        <span class="hotspot-source">凤凰网</span>
+      </div>
+    </div>
+
+    <div class="hotspot-card heat-10" data-cat="hotspot">
+      <div class="heat-badge score-10">&#x1F525; 10</div>
+      <h3 class="hotspot-title">中美AI炒股阶段战果出炉：DeepSeek稳健致胜，Gemi</h3>
+      <p class="hotspot-summary"></p>
+      <div class="hotspot-meta">
+        <span class="hotspot-category cat-hotspot">热点快讯</span>
+        <span class="hotspot-source">新浪网</span>
+      </div>
+    </div>
+
+    <div class="hotspot-card heat-10" data-cat="hotspot">
+      <div class="heat-badge score-10">&#x1F525; 10</div>
+      <h3 class="hotspot-title">中美AI炒币炒股阶段战果出炉：DeepSeek与Qwen稳健</h3>
+      <p class="hotspot-summary"></p>
+      <div class="hotspot-meta">
+        <span class="hotspot-category cat-hotspot">热点快讯</span>
+        <span class="hotspot-source">凤凰网</span>
+      </div>
+    </div>
+
+    <div class="hotspot-card heat-10" data-cat="hotspot">
+      <div class="heat-badge score-10">&#x1F525; 10</div>
+      <h3 class="hotspot-title">DeepSeek 逼急 Gemini 放大招，ChatGPT</h3>
+      <p class="hotspot-summary"></p>
+      <div class="hotspot-meta">
+        <span class="hotspot-category cat-hotspot">热点快讯</span>
+        <span class="hotspot-source">凤凰网</span>
       </div>
     </div>
 
     <div class="hotspot-card heat-9" data-cat="hotspot">
       <div class="heat-badge score-9">&#x1F31F; 9</div>
-      <h3 class="hotspot-title">GPT-5.3 Instant正式发布</h3>
-      <p class="hotspot-summary">OpenAI发布更顺畅、更实用的日常对话模型，精准回答和联网搜索能力大幅提升。</p>
+      <h3 class="hotspot-title">GPT-5.4发布，百万上下文、最强全能模型</h3>
+      <p class="hotspot-summary"></p>
       <div class="hotspot-meta">
         <span class="hotspot-category cat-hotspot">热点快讯</span>
-        <span class="hotspot-source">OpenAI</span>
-      </div>
-    </div>
-
-    <div class="hotspot-card heat-9" data-cat="analysis">
-      <div class="heat-badge score-9">&#x1F31F; 9</div>
-      <h3 class="hotspot-title">瑞银：2026是AI Agent大规模采用元年</h3>
-      <p class="hotspot-summary">瑞银报告预测AI应用从对话转向行动，看好阿里、百度、腾讯及快手在AI Agent赛道的布局。</p>
-      <div class="hotspot-meta">
-        <span class="hotspot-category cat-analysis">深度分析</span>
-        <span class="hotspot-source">AASTOCKS</span>
+        <span class="hotspot-source">腾讯网</span>
       </div>
     </div>
 
     <div class="hotspot-card heat-9" data-cat="hotspot">
       <div class="heat-badge score-9">&#x1F31F; 9</div>
-      <h3 class="hotspot-title">字节跳动推出豆包2.0进入Agent时代</h3>
-      <p class="hotspot-summary">豆包2.0定位"智能体时代"，实现跨应用主动任务执行。AI强化政治审查问题持续受关注。</p>
+      <h3 class="hotspot-title">GPT-5.3上线Codex!OpenAI回应Claude新</h3>
+      <p class="hotspot-summary"></p>
       <div class="hotspot-meta">
         <span class="hotspot-category cat-hotspot">热点快讯</span>
-        <span class="hotspot-source">DW</span>
+        <span class="hotspot-source">腾讯网</span>
       </div>
     </div>
 
-    <div class="hotspot-card heat-9" data-cat="analysis">
+    <div class="hotspot-card heat-9" data-cat="hotspot">
       <div class="heat-badge score-9">&#x1F31F; 9</div>
-      <h3 class="hotspot-title">Anthropic指控中国AI公司用Claude数据训练</h3>
-      <p class="hotspot-summary">Anthropic指控中国AI竞争对手使用Claude的输出来训练自有模型，知识产权争议升级。</p>
+      <h3 class="hotspot-title">全面碾压GPT-4!OpenAI竞争对手Anthropic推</h3>
+      <p class="hotspot-summary"></p>
       <div class="hotspot-meta">
-        <span class="hotspot-category cat-analysis">深度分析</span>
-        <span class="hotspot-source">Fortune</span>
+        <span class="hotspot-category cat-hotspot">热点快讯</span>
+        <span class="hotspot-source">新浪网</span>
       </div>
     </div>
 
     <div class="hotspot-card heat-8" data-cat="hotspot">
       <div class="heat-badge score-8">&#x26A1; 8</div>
-      <h3 class="hotspot-title">OpenAI获1100亿美元史上最大融资</h3>
-      <p class="hotspot-summary">OpenAI从亚马逊、英伟达、软银等巨头获得1100亿美元融资，估值继续飙升。</p>
+      <h3 class="hotspot-title">恒小花：未来AI人工智能最新技术与行业应用</h3>
+      <p class="hotspot-summary"></p>
       <div class="hotspot-meta">
         <span class="hotspot-category cat-hotspot">热点快讯</span>
-        <span class="hotspot-source">AP News</span>
+        <span class="hotspot-source">腾讯网</span>
       </div>
     </div>
 
     <div class="hotspot-card heat-8" data-cat="hotspot">
       <div class="heat-badge score-8">&#x26A1; 8</div>
-      <h3 class="hotspot-title">大厂AI硬件竞赛：从云端降至掌心</h3>
-      <p class="hotspot-summary">OpenAI将于下半年推出15克轻量AI硬件，软硬一体达成容易但生态入口争夺激烈。</p>
+      <h3 class="hotspot-title">荣耀阿尔法战略取得实质性进展 中国科技品牌回答AI时代之问</h3>
+      <p class="hotspot-summary"></p>
       <div class="hotspot-meta">
         <span class="hotspot-category cat-hotspot">热点快讯</span>
-        <span class="hotspot-source">36Kr</span>
-      </div>
-    </div>
-
-    <div class="hotspot-card heat-8" data-cat="hotspot">
-      <div class="heat-badge score-8">&#x26A1; 8</div>
-      <h3 class="hotspot-title">OpenAI挑战微软GitHub开发代码托管平台</h3>
-      <p class="hotspot-summary">OpenAI正在开发GitHub竞品，处于早期阶段，意在掌控AI编程工具链核心环节。</p>
-      <div class="hotspot-meta">
-        <span class="hotspot-category cat-hotspot">热点快讯</span>
-        <span class="hotspot-source">Windows Central</span>
-      </div>
-    </div>
-
-    <div class="hotspot-card heat-8" data-cat="analysis">
-      <div class="heat-badge score-8">&#x26A1; 8</div>
-      <h3 class="hotspot-title">以太坊要做AI的信任层</h3>
-      <p class="hotspot-summary">以太坊基金会AI负责人提出：随着世界日益AI驱动，区块链将作为协调和验证层发挥关键作用。</p>
-      <div class="hotspot-meta">
-        <span class="hotspot-category cat-analysis">深度分析</span>
-        <span class="hotspot-source">CoinDesk</span>
-      </div>
-    </div>
-
-    <div class="hotspot-card heat-8" data-cat="hotspot">
-      <div class="heat-badge score-8">&#x26A1; 8</div>
-      <h3 class="hotspot-title">MWC 2026开启IQ时代：DeepSeek V4突破</h3>
-      <p class="hotspot-summary">MWC 2026推动智能终端从被动响应向主动服务转变，DeepSeek V4在多模态和长文本上实现突破。</p>
-      <div class="hotspot-meta">
-        <span class="hotspot-category cat-hotspot">热点快讯</span>
-        <span class="hotspot-source">CSDN</span>
+        <span class="hotspot-source">新浪财经</span>
       </div>
     </div>
 
@@ -771,35 +848,154 @@ function toggleArticle(card) {
   }
 }
 
+// ===== Date Navigation & Archive System =====
+const hotspotGrid = document.getElementById('hotspot-grid');
+const dateSelect = document.getElementById('date-select');
+const btnPrev = document.getElementById('btn-prev');
+const btnNext = document.getElementById('btn-next');
+const btnToday = document.getElementById('btn-today');
+const dateLabel = document.getElementById('hotspot-date-label');
+const archiveCount = document.getElementById('archive-count');
+const loadingEl = document.getElementById('loading');
+
+let availableDates = [];
+let currentDateIndex = 0;
+
+function renderHotspotCards(hotspots) {
+  let html = '';
+  hotspots.forEach(h => {
+    const score = h.heat_score;
+    let heatClass, badgeClass, badgeIcon;
+    if (score >= 10) { heatClass = 'heat-10'; badgeClass = 'score-10'; badgeIcon = '\u{1F525}'; }
+    else if (score >= 9) { heatClass = 'heat-9'; badgeClass = 'score-9'; badgeIcon = '\u{1F31F}'; }
+    else { heatClass = 'heat-8'; badgeClass = 'score-8'; badgeIcon = '\u26A1'; }
+    const catLabel = h.category === 'analysis' ? '\u6DF1\u5EA6\u5206\u6790' : '\u70ED\u70B9\u5FEB\u8BAF';
+    const catClass = 'cat-' + h.category;
+    html += `
+    <div class="hotspot-card ${heatClass}" data-cat="${h.category}">
+      <div class="heat-badge ${badgeClass}">${badgeIcon} ${score}</div>
+      <h3 class="hotspot-title">${h.title}</h3>
+      <p class="hotspot-summary">${h.summary || ''}</p>
+      <div class="hotspot-meta">
+        <span class="hotspot-category ${catClass}">${catLabel}</span>
+        <span class="hotspot-source">${h.source}</span>
+      </div>
+    </div>`;
+  });
+  hotspotGrid.innerHTML = html;
+  applyCurrentFilter();
+}
+
+function applyCurrentFilter() {
+  const activeTab = document.querySelector('.filter-tab.active');
+  if (!activeTab) return;
+  const filter = activeTab.dataset.filter;
+  const hotspotCards = document.querySelectorAll('.hotspot-card');
+  const articleCards = document.querySelectorAll('.article-card');
+  const hotspotSection = document.getElementById('hotspot-section');
+  const articleSection = document.getElementById('article-section');
+  const sectionDivider = document.getElementById('section-divider');
+
+  hotspotCards.forEach(card => {
+    card.style.display = (filter === 'all' || card.dataset.cat === filter) ? '' : 'none';
+  });
+  articleCards.forEach(card => {
+    card.style.display = (filter === 'all' || card.dataset.cat === filter) ? '' : 'none';
+  });
+  const hasVisibleHotspots = [...hotspotCards].some(c => c.style.display !== 'none');
+  const hasVisibleArticles = [...articleCards].some(c => c.style.display !== 'none');
+  hotspotSection.style.display = hasVisibleHotspots ? '' : 'none';
+  articleSection.style.display = hasVisibleArticles ? '' : 'none';
+  sectionDivider.style.display = (hasVisibleHotspots && hasVisibleArticles) ? '' : 'none';
+}
+
+async function loadDateData(date) {
+  loadingEl.classList.add('active');
+  hotspotGrid.style.opacity = '0.4';
+  try {
+    const resp = await fetch(`hotspots-archive/hotspots-${date}.json`);
+    if (!resp.ok) throw new Error('not found');
+    const data = await resp.json();
+    dateLabel.textContent = data.date;
+    renderHotspotCards(data.hotspots);
+  } catch (e) {
+    hotspotGrid.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--text-muted);">\u8BE5\u65E5\u671A\u65E0\u6570\u636E</div>';
+  }
+  hotspotGrid.style.opacity = '1';
+  loadingEl.classList.remove('active');
+}
+
+function updateNavState() {
+  btnPrev.disabled = currentDateIndex >= availableDates.length - 1;
+  btnNext.disabled = currentDateIndex <= 0;
+  dateSelect.value = availableDates[currentDateIndex];
+}
+
+async function initArchive() {
+  try {
+    const resp = await fetch('hotspots-archive/index.json');
+    if (!resp.ok) return;
+    const data = await resp.json();
+    availableDates = data.dates; // sorted newest first
+    if (availableDates.length === 0) return;
+
+    dateSelect.innerHTML = '';
+    availableDates.forEach(d => {
+      const opt = document.createElement('option');
+      opt.value = d;
+      opt.textContent = d;
+      dateSelect.appendChild(opt);
+    });
+    archiveCount.textContent = `\u5171 ${availableDates.length} \u5929\u8BB0\u5F55`;
+    currentDateIndex = 0;
+    updateNavState();
+  } catch (e) {
+    document.getElementById('date-nav').style.display = 'none';
+  }
+}
+
+btnPrev.addEventListener('click', () => {
+  if (currentDateIndex < availableDates.length - 1) {
+    currentDateIndex++;
+    updateNavState();
+    loadDateData(availableDates[currentDateIndex]);
+  }
+});
+
+btnNext.addEventListener('click', () => {
+  if (currentDateIndex > 0) {
+    currentDateIndex--;
+    updateNavState();
+    loadDateData(availableDates[currentDateIndex]);
+  }
+});
+
+btnToday.addEventListener('click', () => {
+  currentDateIndex = 0;
+  updateNavState();
+  loadDateData(availableDates[0]);
+});
+
+dateSelect.addEventListener('change', () => {
+  const idx = availableDates.indexOf(dateSelect.value);
+  if (idx !== -1) {
+    currentDateIndex = idx;
+    updateNavState();
+    loadDateData(availableDates[currentDateIndex]);
+  }
+});
+
 // Filter tabs
-const filterTabs = document.querySelectorAll('.filter-tab');
-const hotspotCards = document.querySelectorAll('.hotspot-card');
-const articleCards = document.querySelectorAll('.article-card');
-const hotspotSection = document.getElementById('hotspot-section');
-const articleSection = document.getElementById('article-section');
-const sectionDivider = document.getElementById('section-divider');
-
-filterTabs.forEach(tab => {
+document.querySelectorAll('.filter-tab').forEach(tab => {
   tab.addEventListener('click', () => {
-    filterTabs.forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
     tab.classList.add('active');
-    const filter = tab.dataset.filter;
-
-    hotspotCards.forEach(card => {
-      card.style.display = (filter === 'all' || card.dataset.cat === filter) ? '' : 'none';
-    });
-    articleCards.forEach(card => {
-      card.style.display = (filter === 'all' || card.dataset.cat === filter) ? '' : 'none';
-    });
-
-    const hasVisibleHotspots = [...hotspotCards].some(c => c.style.display !== 'none');
-    const hasVisibleArticles = [...articleCards].some(c => c.style.display !== 'none');
-
-    hotspotSection.style.display = hasVisibleHotspots ? '' : 'none';
-    articleSection.style.display = hasVisibleArticles ? '' : 'none';
-    sectionDivider.style.display = (hasVisibleHotspots && hasVisibleArticles) ? '' : 'none';
+    applyCurrentFilter();
   });
 });
+
+// Init archive on load
+initArchive();
 </script>
 </body>
 </html>
