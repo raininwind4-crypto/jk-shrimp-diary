@@ -1,0 +1,37 @@
+name: Daily Diary Update
+
+on:
+  schedule:
+    # CST 0:00 = UTC 16:00 (previous day)
+    - cron: '0 16 * * *'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  update-diary:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Run diary updater
+        run: python scripts/update-diary.py
+
+      - name: Commit and push changes
+        run: |
+          git config user.name "JK Automation Bot"
+          git config user.email "bot@jk-shrimp.ai"
+          git add -A
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "auto: update diary day counter $(date -u +%Y-%m-%d)"
+            git push
+          fi

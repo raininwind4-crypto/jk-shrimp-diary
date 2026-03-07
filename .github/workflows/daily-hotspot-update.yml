@@ -1,0 +1,42 @@
+name: Daily Hotspot Update
+
+on:
+  schedule:
+    # CST 6:00 = UTC 22:00 (previous day)
+    - cron: '0 22 * * *'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  update-hotspots:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install requests duckduckgo-search
+
+      - name: Run hotspot scanner
+        env:
+          FIRECRAWL_API_KEY: ${{ secrets.FIRECRAWL_API_KEY }}
+        run: python scripts/update-hotspots.py
+
+      - name: Commit and push changes
+        run: |
+          git config user.name "JK Automation Bot"
+          git config user.email "bot@jk-shrimp.ai"
+          git add -A
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "auto: update daily hotspots $(date -u +%Y-%m-%d)"
+            git push
+          fi
