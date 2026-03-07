@@ -1,0 +1,89 @@
+{
+  "date": "2026-03-04",
+  "hotspots": [
+    {
+      "title": "阿里千问负责人林俊旸深夜官宣离职，Qwen团队面临分拆",
+      "source": "财新网",
+      "heat": 10,
+      "category": "热点快讯",
+      "summary": "阿里最年轻P10技术高管、通义千问灵魂人物林俊旸凌晨在X平台发文告别，多位核心成员同步离职。"
+    },
+    {
+      "title": "Anthropic被五角大楼拉黑后，Claude登顶App Store第一",
+      "source": "CNN/CNBC",
+      "heat": 10,
+      "category": "深度分析",
+      "summary": "Anthropic因拒绝为美国军方提供AI服务被列入黑名单，Claude应用反而48小时内超越ChatGPT登顶。"
+    },
+    {
+      "title": "OpenAI发布GPT-5.3 Instant：幻觉率降低26.8%",
+      "source": "OpenAI",
+      "heat": 9,
+      "category": "热点快讯",
+      "summary": "GPT-5.3 Instant幻觉率降低26.8%，大幅减少说教式回复和不必要的拒绝。"
+    },
+    {
+      "title": "苹果发布M5芯片MacBook全线更新，AI性能提升6倍",
+      "source": "苹果官网",
+      "heat": 9,
+      "category": "热点快讯",
+      "summary": "M5/M5 Pro/M5 Max全系MacBook上架，Neural Engine性能提升4-6倍，AI硬件普及元年。"
+    },
+    {
+      "title": "OpenAI签署军事合作协议，48小时流失150万订阅用户",
+      "source": "Fortune",
+      "heat": 10,
+      "category": "深度分析",
+      "summary": "OpenAI同意让美国国防部使用其AI模型，引发大规模用户抵制，卸载量暴增300%。"
+    },
+    {
+      "title": "DeepSeek即将发布V4多模态大模型",
+      "source": "Reuters",
+      "heat": 9,
+      "category": "热点快讯",
+      "summary": "DeepSeek V4将支持图片、视频和文本生成，拒绝向Nvidia提前展示性能数据。"
+    },
+    {
+      "title": "Seedance 2.0震动好莱坞",
+      "source": "新华社",
+      "heat": 8,
+      "category": "热点快讯",
+      "summary": "字节跳动AI视频生成模型Seedance 2.0在全球引发轰动，好莱坞高度关注。"
+    },
+    {
+      "title": "中国生成式AI用户规模突破6亿",
+      "source": "新浪科技",
+      "heat": 8,
+      "category": "热点快讯",
+      "summary": "中国生成式人工智能用户规模已超6亿人，AI应用进入大众普及阶段。"
+    },
+    {
+      "title": "Claude Code推出语音模式功能",
+      "source": "TechCrunch",
+      "heat": 8,
+      "category": "热点快讯",
+      "summary": "开发者可通过语音指令进行代码编写和调试，AI编程交互迎来新方式。"
+    },
+    {
+      "title": "OpenAI正在开发GitHub替代品",
+      "source": "The Information",
+      "heat": 8,
+      "category": "热点快讯",
+      "summary": "OpenAI正处于早期开发阶段，打造代码托管平台以对抗微软旗下GitHub。"
+    },
+    {
+      "title": "两会聚焦AI：周鸿祎提出六力模型",
+      "source": "新浪/证券时报",
+      "heat": 9,
+      "category": "深度分析",
+      "summary": "两会期间AI议题成焦点，十五五规划将AI列为核心战略方向。"
+    },
+    {
+      "title": "Google Gemini安全漏洞曝光：Chrome扩展可劫持AI面板",
+      "source": "Palo Alto Unit 42",
+      "heat": 8,
+      "category": "热点快讯",
+      "summary": "恶意扩展可借此访问本地文件、调用摄像头麦克风，Google已紧急修复。"
+    }
+  ]
+}

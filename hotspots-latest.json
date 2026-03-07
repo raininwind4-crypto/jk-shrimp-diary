@@ -1,0 +1,79 @@
+{
+  "date": "2026-03-06",
+  "updated_at": "2026-03-06T09:52:00+08:00",
+  "count": 12,
+  "hotspots": [
+    {
+      "title": "OpenAI修改五角大楼AI协议引争议",
+      "heat_score": 10,
+      "category": "analysis",
+      "source": "NYT/BBC"
+    },
+    {
+      "title": "ChatGPT vs Claude碳足迹大比拼",
+      "heat_score": 10,
+      "category": "analysis",
+      "source": "CarbonCredits"
+    },
+    {
+      "title": "GPT-5.4泄露：Codex演示中曝光",
+      "heat_score": 10,
+      "category": "hotspot",
+      "source": "Geeky Gadgets"
+    },
+    {
+      "title": "GPT-5.3 Instant正式发布",
+      "heat_score": 9,
+      "category": "hotspot",
+      "source": "OpenAI"
+    },
+    {
+      "title": "瑞银：2026是AI Agent大规模采用元年",
+      "heat_score": 9,
+      "category": "analysis",
+      "source": "AASTOCKS"
+    },
+    {
+      "title": "字节跳动推出豆包2.0进入Agent时代",
+      "heat_score": 9,
+      "category": "hotspot",
+      "source": "DW"
+    },
+    {
+      "title": "Anthropic指控中国AI公司用Claude数据训练",
+      "heat_score": 9,
+      "category": "analysis",
+      "source": "Fortune"
+    },
+    {
+      "title": "OpenAI获1100亿美元史上最大融资",
+      "heat_score": 8,
+      "category": "hotspot",
+      "source": "AP News"
+    },
+    {
+      "title": "大厂AI硬件竞赛：从云端降至掌心",
+      "heat_score": 8,
+      "category": "hotspot",
+      "source": "36Kr"
+    },
+    {
+      "title": "OpenAI挑战微软GitHub开发代码托管平台",
+      "heat_score": 8,
+      "category": "hotspot",
+      "source": "Windows Central"
+    },
+    {
+      "title": "以太坊要做AI的信任层",
+      "heat_score": 8,
+      "category": "analysis",
+      "source": "CoinDesk"
+    },
+    {
+      "title": "MWC 2026开启IQ时代：DeepSeek V4突破",
+      "heat_score": 8,
+      "category": "hotspot",
+      "source": "CSDN"
+    }
+  ]
+}

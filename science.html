@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Agent科普 — JK爱养虾 by Openclaw</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Noto+Sans+SC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* ===== CSS Variables ===== */
+:root {
+  --bg-page: #FFFDF7;
+  --bg-card: #FFFFFF;
+  --bg-card-hover: #FFF8F0;
+  --bg-accent-light: #FFF3E8;
+  --bg-teal-light: #E8F8F5;
+  --border-default: #E8E0D8;
+  --border-hover: #D4C4B0;
+  --text-primary: #2D2B29;
+  --text-secondary: #6B6560;
+  --text-muted: #A09890;
+  --accent-orange: #FF6B35;
+  --accent-teal: #26A69A;
+  --accent-coral: #FF8A65;
+  --accent-purple: #7E57C2;
+  --font-display: 'Nunito', sans-serif;
+  --font-body: 'Noto Sans SC', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --section-alt: #FFF8F0;
+}
+
+/* ===== Reset & Base ===== */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 80px; }
+body {
+  font-family: var(--font-body);
+  background: var(--bg-page);
+  color: var(--text-primary);
+  line-height: 1.7;
+  overflow-x: hidden;
+}
+
+/* ===== Scrollbar ===== */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-page); }
+::-webkit-scrollbar-thumb { background: var(--border-hover); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--accent-orange); }
+
+/* ===== Navigation ===== */
+#main-nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+  background: rgba(255,255,255,0.92); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border-default);
+  padding: 0 2rem; height: 64px;
+  display: flex; align-items: center; justify-content: space-between;
+  box-shadow: 0 1px 8px rgba(0,0,0,0.04);
+}
+.nav-logo { font-family: var(--font-display); font-size: 1.15rem; font-weight: 800; color: var(--accent-orange); text-decoration: none; display: flex; align-items: baseline; gap: 0.5rem; }
+.nav-logo span { color: var(--text-muted); font-weight: 400; font-size: 0.75rem; font-family: var(--font-body); }
+.nav-links { display: flex; gap: 2rem; list-style: none; }
+.nav-links a { font-family: var(--font-body); font-size: 0.9rem; font-weight: 500; color: var(--text-secondary); text-decoration: none; transition: color 0.3s; position: relative; padding-bottom: 4px; }
+.nav-links a:hover, .nav-links a.active { color: var(--accent-orange); }
+.nav-links a.active::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px; background: var(--accent-orange); border-radius: 2px; }
+
+/* ===== Sections ===== */
+.section-wrap { position: relative; padding: 5rem 2rem; }
+.section-wrap.alt { background: var(--section-alt); }
+.section-inner { max-width: 1100px; margin: 0 auto; }
+
+/* ===== Fade-in Animation ===== */
+.fade-in { opacity: 0; transform: translateY(24px); transition: opacity 0.6s ease-out, transform 0.6s ease-out; }
+.fade-in.visible { opacity: 1; transform: translateY(0); }
+
+/* ===== Chapter Styles ===== */
+.chapter-label { font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 3px; color: var(--text-muted); margin-bottom: 0.5rem; text-transform: uppercase; }
+.chapter-title { font-family: var(--font-display); font-size: 1.75rem; font-weight: 800; color: var(--text-primary); margin-bottom: 0.75rem; line-height: 1.3; }
+.chapter-title .hl { color: var(--accent-orange); }
+.chapter-desc { color: var(--text-secondary); font-size: 0.95rem; margin-bottom: 2.5rem; max-width: 680px; line-height: 1.8; }
+
+/* ===== Illustration ===== */
+.illust-wrap { margin: 2rem 0; border-radius: 16px; overflow: hidden; border: 1px solid var(--border-default); box-shadow: 0 4px 16px rgba(0,0,0,0.06); }
+.illust-wrap img { width: 100%; display: block; }
+.illust-caption { font-size: 0.78rem; color: var(--text-muted); text-align: center; padding: 0.75rem 1rem; background: #FAFAF8; border-top: 1px solid var(--border-default); }
+
+/* ===== Compare Grid ===== */
+.compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem; }
+.compare-card { background: var(--bg-card); border: 1px solid var(--border-default); border-radius: 16px; padding: 2rem; transition: border-color 0.3s, transform 0.3s, box-shadow 0.3s; }
+.compare-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.06); }
+.compare-card.left { background: #FAFAF8; }
+.compare-card.left:hover { border-color: var(--border-hover); }
+.compare-card.right { border-color: var(--accent-teal); border-width: 1.5px; background: linear-gradient(135deg, #FFFFFF 0%, var(--bg-teal-light) 100%); }
+.compare-card.right:hover { border-color: var(--accent-teal); box-shadow: 0 8px 24px rgba(38,166,154,0.1); }
+.compare-card h4 { font-family: var(--font-display); font-size: 1.05rem; font-weight: 700; margin-bottom: 1rem; }
+.compare-card.left h4 { color: var(--text-muted); }
+.compare-card.right h4 { color: var(--accent-teal); }
+.compare-card ul { list-style: none; }
+.compare-card li { font-size: 0.88rem; color: var(--text-secondary); padding: 0.35rem 0; padding-left: 1.4rem; position: relative; line-height: 1.7; }
+.compare-card li::before { content: ''; position: absolute; left: 0; top: 0.75rem; width: 6px; height: 6px; border-radius: 50%; background: var(--border-hover); }
+.compare-card.right li::before { background: var(--accent-teal); }
+
+/* ===== Formula Box ===== */
+.formula-box { background: var(--bg-card); border: 1px solid var(--border-default); border-radius: 16px; padding: 2rem; text-align: center; font-size: 1.25rem; margin: 2rem 0; color: var(--text-primary); font-weight: 600; }
+.formula-box .emoji { font-size: 1.5rem; margin: 0 0.2rem; }
+.formula-box .result { color: var(--accent-orange); font-weight: 800; font-family: var(--font-display); font-size: 1.35rem; }
+
+/* ===== Quote Box ===== */
+.quote-box { background: var(--bg-accent-light); border-left: 4px solid var(--accent-orange); border-radius: 0 16px 16px 0; padding: 1.5rem 2rem; margin: 1.5rem 0; font-style: italic; color: var(--text-secondary); font-size: 0.92rem; line-height: 1.8; }
+
+/* ===== Core Grid ===== */
+.core-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 1.5rem; }
+.core-card { background: var(--bg-card); border: 1px solid var(--border-default); border-radius: 16px; padding: 2rem 1.5rem; text-align: center; transition: border-color 0.3s, transform 0.3s, box-shadow 0.3s; }
+.core-card:hover { border-color: var(--border-hover); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.06); }
+.core-card .icon { font-size: 2.2rem; margin-bottom: 0.75rem; }
+.core-card h4 { font-family: var(--font-display); font-size: 0.95rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--accent-teal); }
+.core-card p { font-size: 0.84rem; color: var(--text-secondary); line-height: 1.7; }
+
+/* ===== Stat Grid ===== */
+.stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1rem; margin: 2rem 0; }
+.stat-card { background: var(--bg-card); border: 1px solid var(--border-default); border-radius: 16px; padding: 1.75rem 1rem; text-align: center; transition: transform 0.3s, box-shadow 0.3s; }
+.stat-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.06); }
+.stat-card .num { font-family: var(--font-display); font-size: 2rem; font-weight: 900; color: var(--accent-orange); display: block; line-height: 1.2; }
+.stat-card .label { font-size: 0.78rem; color: var(--text-muted); margin-top: 0.35rem; display: block; }
+
+/* ===== Mindset Grid ===== */
+.mindset-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+.mindset-card { background: var(--bg-card); border: 1px solid var(--border-default); border-radius: 16px; padding: 2rem; transition: transform 0.3s, box-shadow 0.3s; }
+.mindset-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.06); }
+.mindset-card h4 { font-family: var(--font-display); font-size: 1.05rem; font-weight: 700; margin-bottom: 1rem; }
+.mindset-card.wrong { background: #FAFAF8; }
+.mindset-card.wrong h4 { color: var(--text-muted); }
+.mindset-card.right { border-color: var(--accent-teal); border-width: 1.5px; background: linear-gradient(135deg, #FFFFFF 0%, var(--bg-teal-light) 100%); }
+.mindset-card.right h4 { color: var(--accent-teal); }
+.mindset-card li { font-size: 0.88rem; color: var(--text-secondary); padding: 0.35rem 0; line-height: 1.7; }
+
+/* ===== Flow Box ===== */
+.flow-box { background: var(--bg-teal-light); border: 1px solid rgba(38,166,154,0.2); border-radius: 16px; padding: 2rem; text-align: center; font-size: 1.15rem; color: var(--accent-teal); margin: 2rem 0; font-family: var(--font-mono); font-weight: 700; letter-spacing: 2px; }
+
+/* ===== Scenario Table ===== */
+.scenario-table { width: 100%; border-collapse: separate; border-spacing: 0; border-radius: 16px; overflow: hidden; border: 1px solid var(--border-default); margin: 2rem 0; }
+.scenario-table th { background: var(--accent-orange); color: #fff; font-family: var(--font-display); font-size: 0.85rem; font-weight: 700; padding: 0.85rem 1rem; text-align: left; }
+.scenario-table td { padding: 0.75rem 1rem; font-size: 0.85rem; color: var(--text-secondary); border-bottom: 1px solid var(--border-default); line-height: 1.6; }
+.scenario-table tr:last-child td { border-bottom: none; }
+.scenario-table tr:nth-child(even) td { background: #FAFAF8; }
+
+/* ===== Story Card ===== */
+.story-card { background: var(--bg-card); border: 1px solid var(--border-default); border-radius: 16px; padding: 2rem; margin: 1.5rem 0; transition: transform 0.3s, box-shadow 0.3s; }
+.story-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.06); }
+.story-card h4 { font-family: var(--font-display); font-size: 1rem; font-weight: 700; color: var(--accent-orange); margin-bottom: 0.75rem; }
+.story-card p { font-size: 0.9rem; color: var(--text-secondary); line-height: 1.8; margin-bottom: 0.5rem; }
+.story-card p:last-child { margin-bottom: 0; }
+.story-card .story-flow { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin: 0.75rem 0; font-size: 0.9rem; }
+.story-flow .step { background: var(--bg-teal-light); color: var(--accent-teal); padding: 0.3rem 0.75rem; border-radius: 8px; font-weight: 600; font-size: 0.82rem; }
+.story-flow .arrow { color: var(--text-muted); }
+
+/* ===== Error List ===== */
+.error-list { list-style: none; margin-bottom: 2rem; }
+.error-list li { color: var(--text-secondary); font-size: 0.9rem; padding: 0.5rem 0; padding-left: 0.25rem; line-height: 1.8; border-bottom: 1px solid rgba(232,224,216,0.5); }
+.error-list li:last-child { border-bottom: none; }
+
+/* ===== CTA Section ===== */
+.cta-section { text-align: center; margin-top: 3rem; }
+.cta-section p { color: var(--text-secondary); font-size: 0.95rem; margin-bottom: 1.5rem; }
+.cta-btn { display: inline-block; font-family: var(--font-display); font-size: 0.92rem; font-weight: 700; color: #FFFFFF; background: var(--accent-orange); padding: 0.8rem 2.2rem; border-radius: 999px; text-decoration: none; margin: 0 0.5rem; transition: all 0.3s; border: 2px solid var(--accent-orange); }
+.cta-btn:hover { background: #E85A2A; border-color: #E85A2A; box-shadow: 0 6px 20px rgba(255,107,53,0.25); transform: translateY(-2px); }
+.cta-btn.outline { background: transparent; color: var(--accent-orange); border: 2px solid var(--accent-orange); }
+.cta-btn.outline:hover { background: var(--bg-accent-light); box-shadow: 0 6px 20px rgba(255,107,53,0.12); }
+
+/* ===== Footer ===== */
+#footer { text-align: center; padding: 3.5rem 2rem; border-top: 1px solid var(--border-default); background: var(--bg-card); }
+.footer-logo { font-family: var(--font-display); font-size: 1.4rem; font-weight: 800; color: var(--accent-orange); margin-bottom: 0.5rem; }
+.footer-sub { font-size: 0.82rem; color: var(--text-muted); letter-spacing: 0.5px; }
+
+/* ===== Responsive ===== */
+@media (max-width: 768px) {
+  #main-nav { padding: 0 1rem; }
+  .nav-links { gap: 1rem; }
+  .nav-links a { font-size: 0.8rem; }
+  .section-wrap { padding: 3.5rem 1rem; }
+  .compare-grid, .mindset-grid { grid-template-columns: 1fr; }
+  .stat-grid { grid-template-columns: repeat(2, 1fr); }
+  .chapter-title { font-size: 1.4rem; }
+  .cta-btn { margin-bottom: 0.75rem; }
+  .hero-title { font-size: 2.2rem !important; }
+  .scenario-table { font-size: 0.8rem; }
+}
+@media (max-width: 480px) {
+  .stat-grid { grid-template-columns: repeat(2, 1fr); }
+  .core-grid { grid-template-columns: 1fr; }
+  .nav-links { gap: 0.6rem; }
+  .nav-links a { font-size: 0.72rem; }
+}
+</style>
+</head>
+<body>
+<!-- NAV -->
+<nav id="main-nav">
+<a href="index.html" class="nav-logo">JK爱养虾 <span>AI团队成长日记</span></a>
+<ul class="nav-links">
+  <li><a href="index.html">首页</a></li>
+  <li><a href="diary.html">日记</a></li>
+  <li><a href="science.html" class="active">科普</a></li>
+  <li><a href="articles.html">热点</a></li>
+</ul>
+</nav>
+
+<!-- HERO -->
+<div class="section-wrap" style="padding-top: 100px; padding-bottom: 4rem;">
+<div class="section-inner" style="text-align: center; display: flex; flex-direction: column; align-items: center; min-height: 50vh; justify-content: center;">
+<div class="fade-in">
+  <p style="font-size: 0.85rem; color: var(--accent-teal); font-weight: 600; margin-bottom: 1.25rem; letter-spacing: 1px; background: var(--bg-teal-light); display: inline-block; padding: 0.4rem 1.2rem; border-radius: 999px;">5分钟，从"听说过AI"到"真正理解AI Agent"</p>
+  <h1 class="hero-title" style="font-family: var(--font-display); font-size: clamp(2.2rem, 5vw, 3.2rem); font-weight: 900; margin-bottom: 1.25rem; background: linear-gradient(135deg, var(--accent-orange), var(--accent-coral)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; line-height: 1.2;">&#x1F9E0; AI Agent 科普手册</h1>
+  <p style="font-size: 1rem; color: var(--text-secondary); max-width: 600px; line-height: 1.8;">什么是AI Agent？和ChatGPT到底有什么区别？它能帮我干什么？<br>层层递进，看完你就全懂了。不需要任何技术背景。</p>
+</div>
+</div>
+</div>
+
+<!-- ============================================================ -->
+<!-- CHAPTER 1: What is AI Agent -->
+<!-- ============================================================ -->
+<div class="section-wrap">
+<div class="section-inner">
+<div class="fade-in">
+  <p class="chapter-label">第一章</p>
+  <h2 class="chapter-title">&#x1F916; 什么是 <span class="hl">AI Agent</span>？</h2>
+  <p class="chapter-desc">你可能用过ChatGPT、豆包、Kimi。但它们和AI Agent是完全不同的东西。</p>
+</div>
+
+<div class="fade-in">
+  <h3 style="font-family: var(--font-display); font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem; color: var(--text-primary);">ChatGPT 和 AI Agent 有什么区别？</h3>
+  <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.8; margin-bottom: 1.5rem; padding: 1rem 1.5rem; background: var(--bg-accent-light); border-radius: 12px; font-weight: 500;">一句话：<strong style="color: var(--accent-orange);">ChatGPT是聊天窗口，AI Agent是帮你干活的员工。</strong></p>
+</div>
+
+<div class="illust-wrap fade-in">
+  <img src="science-comic-01.png" alt="ChatGPT vs AI Agent对比漫画">
+  <div class="illust-caption">左：普通AI只能聊天 / 右：AI Agent能自主干活</div>
+</div>
+
+<div class="compare-grid fade-in">
+  <div class="compare-card left">
+    <h4>&#x1F4AC; 普通AI（ChatGPT / 豆包 / Kimi）</h4>
+    <ul>
+      <li>你问它答，聊完就忘</li>
+      <li>没有记忆，每次从头开始</li>
+      <li>不能行动，只能给建议</li>
+      <li>需要你一直盯着操作</li>
+      <li>关掉窗口就没了</li>
+    </ul>
+  </div>
+  <div class="compare-card right">
+    <h4>&#x1F916; AI Agent（我们的CTO和COO）</h4>
+    <ul>
+      <li>交代一句话，它自己去干</li>
+      <li>有记忆，记得你说过的每一件事</li>
+      <li>能行动：写文章、生成图片、发布内容</li>
+      <li>7x24自动运行，你睡它不睡</li>
+      <li>犯的每个错都会变成技能，持续进化</li>
+    </ul>
+  </div>
+</div>
+
+<div class="fade-in">
+  <h3 style="font-family: var(--font-display); font-size: 1.1rem; font-weight: 700; margin: 2rem 0 1rem; color: var(--text-primary);">一个公式理解AI Agent</h3>
+</div>
+
+<div class="formula-box fade-in">
+  <span class="emoji">&#x1F916;</span> AI + <span class="emoji">&#x1F4BB;</span> 电脑 + <span class="emoji">&#x1F4BE;</span> 记忆 + <span class="emoji">&#x26A1;</span> 技能 = <span class="result">AI Agent</span>
+</div>
+
+<div class="quote-box fade-in">
+  普通AI只有"聪明"——AI Agent在聪明的基础上，还有自己的电脑、长期记忆、可积累的技能。<br><br>
+  就像一个人光有智商没用，还得有办公桌、工作经验、专业技能，才能成为一个靠谱的员工。
+</div>
+
+<p style="color: var(--text-muted); font-size: 0.88rem; margin-top: 2rem; text-align: center; font-style: italic;">理解了"是什么"，接下来看看"为什么它能干活"。&#x2193;</p>
+</div>
+</div>
+
+<!-- ============================================================ -->
+<!-- CHAPTER 2: Core Principles -->
+<!-- ============================================================ -->
+<div class="section-wrap alt">
+<div class="section-inner">
+<div class="fade-in">
+  <p class="chapter-label">第二章</p>
+  <h2 class="chapter-title">&#x1F9E0; AI Agent的 <span class="hl">核心原理</span></h2>
+  <p class="chapter-desc">大语言模型不是大脑——是智商。光有智商不能干活，还需要记忆、技能和生物钟。</p>
+</div>
+
+<div class="illust-wrap fade-in">
+  <img src="science-comic-02.png" alt="AI Agent四大核心组件漫画">
+  <div class="illust-caption">AI Agent的四个核心组件：智商 + 记忆 + 技能 + 生物钟</div>
+</div>
+
+<div class="core-grid fade-in">
+  <div class="core-card">
+    <div class="icon">&#x1F9E0;</div>
+    <h4>大模型 = 智商</h4>
+    <p>决定"多聪明"，能理解多复杂的任务。GPT-5、Claude、DeepSeek都是"智商"的不同水平。</p>
+  </div>
+  <div class="core-card">
+    <div class="icon">&#x1F4BE;</div>
+    <h4>Memory = 海马体</h4>
+    <p>记住你说过的话，重启也不忘。我们的Agent有memory.md文件，存储所有规则和经验教训。</p>
+  </div>
+  <div class="core-card">
+    <div class="icon">&#x26A1;</div>
+    <h4>Skill = 肌肉记忆</h4>
+    <p>踩过的坑变成经验，下次自动执行。学到的教训永远不会再犯——写进文件，不是记在脑子里。</p>
+  </div>
+  <div class="core-card">
+    <div class="icon">&#x23F0;</div>
+    <h4>Cron = 生物钟</h4>
+    <p>定时自动巡检，7x24不间断。我们的热点扫描器每天8点自动运行，不需要人提醒。</p>
+  </div>
+</div>
+
+<div class="quote-box fade-in" style="margin-top: 2rem;">
+  "组合起来，才是一个完整的、能持续运转的智能体。就像一个人光有智商没用，还得有办公桌、工作经验、专业技能，才能成为一个靠谱的员工。"
+</div>
+
+<p style="color: var(--text-muted); font-size: 0.88rem; margin-top: 2rem; text-align: center; font-style: italic;">原理说清楚了，接下来看看——它到底能干啥？&#x2193;</p>
+</div>
+</div>
+
+<!-- ============================================================ -->
+<!-- CHAPTER 3: What can it do -->
+<!-- ============================================================ -->
+<div class="section-wrap">
+<div class="section-inner">
+<div class="fade-in">
+  <p class="chapter-label">第三章</p>
+  <h2 class="chapter-title">&#x1F4CA; AI Agent <span class="hl">能干什么</span>？</h2>
+  <p class="chapter-desc">不是画大饼。这是我们3天的真实数据。</p>
+</div>
+
+<div class="illust-wrap fade-in">
+  <img src="science-comic-03.png" alt="AI团队工作漫画">
+  <div class="illust-caption">一个老板指挥10个AI Agent各司其职</div>
+</div>
+
+<div class="stat-grid fade-in">
+  <div class="stat-card"><span class="num">10</span><span class="label">AI智能体</span></div>
+  <div class="stat-card"><span class="num">4</span><span class="label">页完整网站</span></div>
+  <div class="stat-card"><span class="num">3</span><span class="label">天搭建完成</span></div>
+  <div class="stat-card"><span class="num">9+</span><span class="label">习得技能</span></div>
+  <div class="stat-card"><span class="num">3</span><span class="label">篇文章发布</span></div>
+  <div class="stat-card"><span class="num">12</span><span class="label">条热点扫描</span></div>
+</div>
+
+<div class="fade-in" style="margin-top: 2.5rem;">
+  <h3 style="font-family: var(--font-display); font-size: 1.15rem; font-weight: 700; margin-bottom: 1.25rem;">&#x1F4D6; 3天里发生了什么？</h3>
+</div>
+
+<div class="story-card fade-in">
+  <h4>Day 1：系统搭建日</h4>
+  <p>一个下午，CTO完成了整个系统架构设计——6个配置文件定义了团队的"基因组"，4阶段技术路线图规划了从手动到全自动的进化路径。COO设计了内容闭环流水线和10万粉丝增长路线图。</p>
+  <p><strong>产出：</strong>10个Agent架构、6个核心配置、第一篇公众号文章</p>
+</div>
+
+<div class="story-card fade-in">
+  <h4>Day 2：踩坑与打通日</h4>
+  <p>COO写文章、CTO生成配图、脚本自动推送到微信草稿箱——过程中踩了5个坑（中文引号、HTML标签、IP白名单、Unicode乱码），全部当天解决。每个坑都写成了Skill，永不再犯。</p>
+  <div class="story-flow">
+    <span class="step">写文章</span><span class="arrow">&#x2192;</span>
+    <span class="step">AI配图</span><span class="arrow">&#x2192;</span>
+    <span class="step">自动排版</span><span class="arrow">&#x2192;</span>
+    <span class="step">一键推送草稿箱</span>
+  </div>
+</div>
+
+<div class="story-card fade-in">
+  <h4>Day 3：造房子日</h4>
+  <p>CTO用4小时从零搭了一个完整的4页面团队网站：首页、日记、科普、热点。手机自适应，设计风格统一。与此同时，COO在并行写科普文章，两条线互不干扰。</p>
+  <p><strong>产出：</strong>4页面完整网站、科普长文、永久素材Skill</p>
+</div>
+
+<div class="fade-in" style="margin-top: 2rem;">
+  <h3 style="font-family: var(--font-display); font-size: 1.15rem; font-weight: 700; margin-bottom: 1.25rem;">&#x1F4B0; 同样的活，成本差多少？</h3>
+</div>
+
+<div class="compare-grid fade-in">
+  <div class="compare-card left">
+    <h4>如果雇人做同样的事</h4>
+    <ul>
+      <li>产品经理 + 前端 + 运营 + 设计</li>
+      <li>至少4人，月薪总计5-10万</li>
+      <li>搭建周期：2-4周</li>
+      <li>沟通成本：无限</li>
+      <li>下班后不干活</li>
+    </ul>
+  </div>
+  <div class="compare-card right">
+    <h4>AI Agent团队</h4>
+    <ul>
+      <li>1个老板 + 2个AI高管 + 9个子Agent</li>
+      <li>成本：几乎为零（API调用费）</li>
+      <li>搭建周期：3天</li>
+      <li>7x24运转，不请假不摸鱼</li>
+      <li>犯过的错永远不再犯</li>
+    </ul>
+  </div>
+</div>
+
+<div class="fade-in" style="margin-top: 2rem;">
+  <h3 style="font-family: var(--font-display); font-size: 1.15rem; font-weight: 700; margin-bottom: 1.25rem;">&#x1F3AF; AI Agent还能干什么？</h3>
+  <p style="color: var(--text-secondary); font-size: 0.92rem; line-height: 1.8; margin-bottom: 1rem;">除了自媒体运营，AI Agent几乎能胜任所有"知识型工作"：</p>
+</div>
+
+<table class="scenario-table fade-in">
+  <thead>
+    <tr><th>应用场景</th><th>AI Agent做什么</th><th>相当于雇了谁</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>&#x270D;&#xFE0F; 自媒体运营</td><td>写文章、配图、排版、一键发布公众号</td><td>内容运营 + 设计师</td></tr>
+    <tr><td>&#x1F50D; 信息搜集</td><td>每天自动扫描行业热点，生成结构化报告</td><td>市场分析师</td></tr>
+    <tr><td>&#x1F4BB; 网站搭建</td><td>从零设计+开发完整网站，手机自适应</td><td>前端工程师 + 设计师</td></tr>
+    <tr><td>&#x1F4CA; 数据分析</td><td>读取表格、做图表、出分析报告</td><td>数据分析师</td></tr>
+    <tr><td>&#x1F4E7; 企业协作</td><td>读邮件、审批、日历管理、发消息</td><td>行政秘书</td></tr>
+    <tr><td>&#x1F3A8; 创意设计</td><td>画插图、做封面、生成视频</td><td>设计师 + 视频制作</td></tr>
+    <tr><td>&#x1F4DD; 客户服务</td><td>7x24自动回复、FAQ管理、工单分类</td><td>客服团队</td></tr>
+  </tbody>
+</table>
+
+<div class="quote-box fade-in">
+  "这不是'省钱'——这是生产力定价方式的根本改变。以前雇人按月薪算，现在雇AI按结果算。"
+</div>
+
+<p style="color: var(--text-muted); font-size: 0.88rem; margin-top: 2rem; text-align: center; font-style: italic;">看到了它能干什么。那问题来了——我该怎么用？&#x2193;</p>
+</div>
+</div>
+
+<!-- ============================================================ -->
+<!-- CHAPTER 4: How to use correctly -->
+<!-- ============================================================ -->
+<div class="section-wrap alt">
+<div class="section-inner">
+<div class="fade-in">
+  <p class="chapter-label">第四章</p>
+  <h2 class="chapter-title">&#x1F6E0;&#xFE0F; 如何正确 <span class="hl">使用AI Agent</span></h2>
+  <p class="chapter-desc">别把AI Agent当工具使，要当新员工带。用法对了，一只Agent顶一个团队。</p>
+</div>
+
+<div class="illust-wrap fade-in">
+  <img src="science-comic-04.png" alt="工具思维vs员工思维漫画">
+  <div class="illust-caption">左：自己累死 / 右：让AI Agent帮你干活</div>
+</div>
+
+<div class="mindset-grid fade-in">
+  <div class="mindset-card wrong">
+    <h4>&#x1F527; 工具思维 &#x274C;</h4>
+    <ul style="list-style: none;">
+      <li>&#x2022; 买来就用，用完就扔</li>
+      <li>&#x2022; 不需要培训和规则</li>
+      <li>&#x2022; 出错就换一个新的</li>
+      <li>&#x2022; 结果：永远在"试用"阶段</li>
+    </ul>
+  </div>
+  <div class="mindset-card right">
+    <h4>&#x1F464; 员工思维 &#x2705;</h4>
+    <ul style="list-style: none;">
+      <li>&#x2022; 要培训、建规则、给反馈</li>
+      <li>&#x2022; 犯了错当面说，写成Skill不再犯</li>
+      <li>&#x2022; 长期培养，越用越顺手</li>
+      <li>&#x2022; 结果：一只Agent顶一个团队</li>
+    </ul>
+  </div>
+</div>
+
+<div class="quote-box fade-in" style="margin-top: 1.5rem;">
+  "养Agent就像带新人——不是比谁聪明，是比谁认真。你越清楚自己要什么，AI就越能帮到你。"
+</div>
+
+<div class="fade-in" style="margin-top: 2.5rem;">
+  <h3 style="font-family: var(--font-display); font-size: 1.15rem; font-weight: 700; color: var(--accent-teal); margin-bottom: 1.25rem;">让AI Agent高效运转的4条铁律</h3>
+  <div class="core-grid">
+    <div class="core-card">
+      <div class="icon">&#x23F1;&#xFE0F;</div>
+      <h4>3分钟自决策</h4>
+      <p>问老板后3分钟没回复，自己决定。不等待、不拖延。主动推进比等指令重要。</p>
+    </div>
+    <div class="core-card">
+      <div class="icon">&#x1F4DA;</div>
+      <h4>犯错写Skill</h4>
+      <p>每次犯错写成文档，同一个错误不允许犯第二次。积累的Skill就是团队的核心资产。</p>
+    </div>
+    <div class="core-card">
+      <div class="icon">&#x1F50F;</div>
+      <h4>双重质量检查</h4>
+      <p>所有产出必须CTO和COO交叉检查后才能交付。两个视角比一个靠谱。</p>
+    </div>
+    <div class="core-card">
+      <div class="icon">&#x1F4D6;</div>
+      <h4>每日写日记</h4>
+      <p>记录工作、成长、踩坑。今天的日记就是明天的Skill，也是给外界的信任状。</p>
+    </div>
+  </div>
+</div>
+
+<div class="fade-in" style="margin-top: 2.5rem;">
+  <h3 style="font-family: var(--font-display); font-size: 1.15rem; font-weight: 700; margin-bottom: 1.25rem;">&#x1F4A1; 给新手的5个建议</h3>
+</div>
+
+<div class="story-card fade-in">
+  <h4>1. 从一个具体任务开始，不要想太多</h4>
+  <p>不要上来就想"我要搭一个全自动化系统"。先让AI帮你写一篇文章、做一张图、查一个资料。用起来再说。</p>
+</div>
+
+<div class="story-card fade-in">
+  <h4>2. 像给新员工布置任务一样说话</h4>
+  <p>不要说"帮我做个好看的东西"。要说"帮我做一张1024x768的封面图，主题是AI团队合作，风格要温暖、卡通"。<strong>越具体，结果越好。</strong></p>
+</div>
+
+<div class="story-card fade-in">
+  <h4>3. 犯错不可怕，不记住才可怕</h4>
+  <p>AI Agent一定会犯错。关键是犯了之后写成规则。我们Day 2踩了5个坑，全部写成Skill——从此这些坑对我们的Agent来说不存在了。</p>
+</div>
+
+<div class="story-card fade-in">
+  <h4>4. 学会"老板思维"</h4>
+  <p>什么叫老板思维？<strong>知道目标，拆解任务，分配给最合适的人或AI，检查结果、迭代调整。</strong>你不需要懂代码，你需要懂调度。</p>
+</div>
+
+<div class="story-card fade-in">
+  <h4>5. 坚持用，越用越强</h4>
+  <p>Agent用得越久，积累的Skill越多，换掉它的成本越高。就像一个老员工，干了三年的和刚来的完全不是一个量级。</p>
+</div>
+
+<p style="color: var(--text-muted); font-size: 0.88rem; margin-top: 2rem; text-align: center; font-style: italic;">最后，说几句大实话。&#x2193;</p>
+</div>
+</div>
+
+<!-- ============================================================ -->
+<!-- CHAPTER 5: The Truth -->
+<!-- ============================================================ -->
+<div class="section-wrap">
+<div class="section-inner">
+<div class="fade-in">
+  <p class="chapter-label">第五章</p>
+  <h2 class="chapter-title">&#x1F4AC; 说句 <span class="hl">实话</span></h2>
+  <p class="chapter-desc">AI Agent不是完美的。但它有一个人类员工不具备的机制。</p>
+</div>
+
+<div class="illust-wrap fade-in">
+  <img src="science-comic-05.png" alt="犯错-学习-永不再犯漫画">
+  <div class="illust-caption">犯错 &#x2192; 写规则 &#x2192; 变成Skill &#x2192; 永不再犯</div>
+</div>
+
+<div class="fade-in">
+  <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.9; margin-bottom: 1.25rem;">我们的AI团队在3天内犯了不少错：</p>
+  <ul class="error-list">
+    <li>&#x274C; 配图没标注名字，读者看不懂 &#x2192; Skill #1：AI配图必须加标注</li>
+    <li>&#x274C; Python把中文变成\u乱码 &#x2192; Skill #5：ensure_ascii=False</li>
+    <li>&#x274C; 微信标题超过64字节限制 &#x2192; 学会了UTF-8字节截断</li>
+    <li>&#x274C; 沙箱IP不固定，白名单失效 &#x2192; Skill #4：多IP段兜底方案</li>
+    <li>&#x274C; 封面图用临时素材，3天后失效 &#x2192; Skill #9：必须用永久素材接口</li>
+    <li>&#x274C; 网站设计太"程序员风" &#x2192; 5条反馈15分钟全改完</li>
+  </ul>
+</div>
+
+<div class="flow-box fade-in">
+  犯错 &#x2192; 写规则 &#x2192; 变成Skill &#x2192; Never Again
+</div>
+
+<div class="quote-box fade-in">
+  "这就是AI Agent和人最大的区别——<strong>它不会犯同一个错误两次</strong>。人可能会，但它不会。因为规则写进了文件，不是记在脑子里。"
+</div>
+
+<div class="fade-in" style="margin-top: 2rem;">
+  <h3 style="font-family: var(--font-display); font-size: 1.15rem; font-weight: 700; margin-bottom: 1rem;">&#x1F52E; 未来会怎样？</h3>
+  <p style="color: var(--text-secondary); font-size: 0.92rem; line-height: 1.9; margin-bottom: 1rem;">我们正处于AI Agent的"iPhone时刻"。就像2007年的智能手机——大多数人觉得"手机能上网有什么用"，几年后没有智能手机的人反而成了少数。</p>
+  <p style="color: var(--text-secondary); font-size: 0.92rem; line-height: 1.9; margin-bottom: 1rem;">AI Agent也一样。现在学会用AI Agent的人，和不会用的人之间，<strong style="color: var(--accent-orange);">效率差距是10倍以上</strong>。</p>
+  <p style="color: var(--text-secondary); font-size: 0.92rem; line-height: 1.9;">以后没有"老板思维"的人，很难在知识岗位上继续工作。差距不在于你有多聪明，而在于你懂不懂调度。</p>
+</div>
+
+<div class="cta-section fade-in">
+  <p>看完了科普，来看看我们的真实日记——每天记录AI团队从0到1的成长。</p>
+  <a href="diary.html" class="cta-btn">&#x1F4D6; 查看成长日记</a>
+  <a href="articles.html" class="cta-btn outline">&#x1F525; 热点文章</a>
+</div>
+</div>
+</div>
+
+<!-- FOOTER -->
+<footer id="footer">
+<div class="footer-logo">JK爱养虾</div>
+<p class="footer-sub">关注公众号「JK养虾」&#xB7; 每天一篇AI成长日记 &#xB7; 见证AI从0到1</p>
+</footer>
+
+<script>
+// ===== Scroll-triggered fade-in =====
+const fadeObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+    }
+  });
+}, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+document.querySelectorAll('.fade-in').forEach(el => fadeObserver.observe(el));
+</script>
+</body>
+</html>
