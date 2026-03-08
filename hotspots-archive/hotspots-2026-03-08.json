@@ -1,79 +1,79 @@
 {
   "date": "2026-03-08",
-  "updated_at": "2026-03-08T06:51:07.807215+08:00",
+  "updated_at": "2026-03-08T11:00:14.551956+08:00",
   "count": 12,
   "hotspots": [
     {
-      "title": "智源发布2026十大AI技术趋势 - 新华网",
-      "heat_score": 8,
-      "category": "hotspot",
-      "source": "AI最新进展 2026"
+      "title": "2026年全球AI发展新趋势：人人都能看懂的AI未来报告",
+      "heat_score": 10,
+      "category": "analysis",
+      "source": "腾讯网"
     },
     {
-      "title": "2026十大AI技术趋势发布，释放企业布局AGI的关键信号",
-      "heat_score": 8,
+      "title": "实测 GPT-5.3-Codex，OpenAI 史上第一个高",
+      "heat_score": 10,
       "category": "hotspot",
-      "source": "AI最新进展 2026"
+      "source": "爱范儿"
     },
     {
-      "title": "OpenAI 新闻动态",
-      "heat_score": 8,
+      "title": "中美AI炒股阶段战果出炉：DeepSeek稳健致胜，Gemi",
+      "heat_score": 10,
       "category": "hotspot",
-      "source": "OpenAI GPT最新消息"
+      "source": "新浪网"
     },
     {
-      "title": "OpenAI 最新消息",
-      "heat_score": 8,
+      "title": "中美AI炒币炒股阶段战果出炉：DeepSeek与Qwen稳健",
+      "heat_score": 10,
       "category": "hotspot",
-      "source": "OpenAI GPT最新消息"
+      "source": "凤凰网"
     },
     {
-      "title": "OpenAI News",
-      "heat_score": 8,
+      "title": "OpenAI深夜祭出GPT-5.4，暴击Claude!原生操",
+      "heat_score": 9,
       "category": "hotspot",
-      "source": "OpenAI GPT最新消息"
+      "source": "新浪财经"
     },
     {
-      "title": "GPT-5 隆重登場",
-      "heat_score": 8,
+      "title": "GPT-5.3上线Codex!OpenAI回应Claude新",
+      "heat_score": 9,
       "category": "hotspot",
-      "source": "OpenAI GPT最新消息"
+      "source": "腾讯网"
     },
     {
-      "title": "GPT-5 正式发布",
-      "heat_score": 8,
+      "title": "OpenAI and Anthropic release n",
+      "heat_score": 9,
       "category": "hotspot",
-      "source": "OpenAI GPT最新消息"
+      "source": "WION"
     },
     {
-      "title": "OpenAI – 量子位",
-      "heat_score": 8,
+      "title": "Gemini 3「开眼」像素级操控，谷歌回应DeepSeek",
+      "heat_score": 9,
       "category": "hotspot",
-      "source": "OpenAI GPT最新消息"
+      "source": "36氪"
     },
     {
-      "title": "OpenAI 新聞",
+      "title": "荣耀阿尔法战略取得实质性进展 中国科技品牌回答AI时代之问",
       "heat_score": 8,
       "category": "hotspot",
-      "source": "OpenAI GPT最新消息"
+      "source": "新浪财经"
     },
     {
-      "title": "GPT‑4 是OpenAI 最先進的系統，可以產生更安全",
+      "title": "AI 论文周报丨AI Agent最新进展，PaperBana",
       "heat_score": 8,
-      "category": "hotspot",
-      "source": "OpenAI GPT最新消息"
+      "category": "analysis",
+      "source": "腾讯网"
     },
     {
-      "title": "人工智能新闻-百度AI开放平台",
+      "title": "AI狂飙时代：2026年将迎来指数级加速的Scaling L",
       "heat_score": 8,
       "category": "hotspot",
-      "source": "中国AI 人工智能新闻"
+      "source": "搜狐"
     },
     {
-      "title": "Users Ghost ChatGPT for Claude",
+      "title": "2026 地质前沿速递｜嫦娥六号登榜十大进展，AI 找矿引爆",
       "heat_score": 8,
-      "category": "hotspot",
-      "source": "OpenAI GPT Claude la"
+      "category": "analysis",
+      "source": "搜狐"
     }
   ]
 }

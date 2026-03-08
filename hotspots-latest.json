@@ -1,6 +1,6 @@
 {
   "date": "2026-03-08",
-  "updated_at": "2026-03-08T10:56:22.882902+08:00",
+  "updated_at": "2026-03-08T11:00:14.551956+08:00",
   "count": 12,
   "hotspots": [
     {
@@ -16,12 +16,6 @@
       "source": "爱范儿"
     },
     {
-      "title": "GPT-5发布在即：OpenAI被控违反服务条款，Claud",
-      "heat_score": 10,
-      "category": "hotspot",
-      "source": "凤凰网"
-    },
-    {
       "title": "中美AI炒股阶段战果出炉：DeepSeek稳健致胜，Gemi",
       "heat_score": 10,
       "category": "hotspot",
@@ -34,22 +28,22 @@
       "source": "凤凰网"
     },
     {
-      "title": "GPT-5.3上线Codex!OpenAI回应Claude新",
-      "heat_score": 9,
-      "category": "hotspot",
-      "source": "腾讯网"
-    },
-    {
       "title": "OpenAI深夜祭出GPT-5.4，暴击Claude!原生操",
       "heat_score": 9,
       "category": "hotspot",
       "source": "新浪财经"
     },
     {
-      "title": "GPT正面对决Claude，OpenAI竟没全赢，AI安全「",
+      "title": "GPT-5.3上线Codex!OpenAI回应Claude新",
       "heat_score": 9,
       "category": "hotspot",
-      "source": "36氪"
+      "source": "腾讯网"
+    },
+    {
+      "title": "OpenAI and Anthropic release n",
+      "heat_score": 9,
+      "category": "hotspot",
+      "source": "WION"
     },
     {
       "title": "Gemini 3「开眼」像素级操控，谷歌回应DeepSeek",
@@ -58,21 +52,27 @@
       "source": "36氪"
     },
     {
-      "title": "AI 论文周报丨AI Agent最新进展，PaperBana",
-      "heat_score": 8,
-      "category": "analysis",
-      "source": "腾讯网"
-    },
-    {
       "title": "荣耀阿尔法战略取得实质性进展 中国科技品牌回答AI时代之问",
       "heat_score": 8,
       "category": "hotspot",
       "source": "新浪财经"
     },
     {
+      "title": "AI 论文周报丨AI Agent最新进展，PaperBana",
+      "heat_score": 8,
+      "category": "analysis",
+      "source": "腾讯网"
+    },
+    {
       "title": "AI狂飙时代：2026年将迎来指数级加速的Scaling L",
       "heat_score": 8,
       "category": "hotspot",
+      "source": "搜狐"
+    },
+    {
+      "title": "2026 地质前沿速递｜嫦娥六号登榜十大进展，AI 找矿引爆",
+      "heat_score": 8,
+      "category": "analysis",
       "source": "搜狐"
     }
   ]

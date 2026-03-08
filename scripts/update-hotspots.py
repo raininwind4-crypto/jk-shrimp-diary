@@ -163,8 +163,6 @@ def search_tianapi_all():
     results.extend(search_tianapi("douyinhot", "抖音", api_key))
     # WeChat hotspot
     results.extend(search_tianapi("wxhottopic", "微信", api_key))
-    # Toutiao hotspot (TianAPI version, complementary to free endpoint)
-    results.extend(search_tianapi("toutiaohot", "头条TianAPI", api_key))
 
     print(f"[info] TianAPI total AI-related results: {len(results)}")
     return results
