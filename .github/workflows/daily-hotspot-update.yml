@@ -27,6 +27,7 @@ jobs:
       - name: Run hotspot scanner
         env:
           FIRECRAWL_API_KEY: ${{ secrets.FIRECRAWL_API_KEY }}
+          TIANAPI_KEY: ${{ secrets.TIANAPI_KEY }}
         run: python scripts/update-hotspots.py
 
       - name: Commit and push changes

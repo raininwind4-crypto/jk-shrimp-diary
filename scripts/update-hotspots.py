@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
 GitHub Actions hotspot updater for JK养虾.
-Scans AI news, updates articles.html and hotspots-latest.json.
+Multi-platform scanner: Firecrawl, DuckDuckGo, Toutiao, TianAPI (Douyin/WeChat/Toutiao).
+Updates articles.html and hotspots-latest.json.
 """
 import json
 import os
@@ -11,6 +12,15 @@ from datetime import datetime, timezone, timedelta
 
 CST = timezone(timedelta(hours=8))
 SITE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+# AI-related filter keywords for platform hotspots
+AI_FILTER_KEYWORDS = [
+    "AI", "人工智能", "大模型", "GPT", "Claude", "Gemini", "DeepSeek",
+    "OpenAI", "Anthropic", "Google", "机器人", "算法", "芯片", "英伟达",
+    "NVIDIA", "智能", "自动驾驶", "Agent", "AGI", "千问", "豆包",
+    "Sora", "Copilot", "ChatGPT", "百度", "文心", "通义", "字节",
+    "科技", "数据", "算力", "训练", "推理", "Llama", "开源模型",
+]
 
 
 def search_duckduckgo(keywords, max_results=10):
@@ -70,6 +80,96 @@ def search_firecrawl(keywords):
     return results
 
 
+def is_ai_related(text):
+    """Check if text is AI-related based on filter keywords."""
+    text_lower = text.lower()
+    return any(kw.lower() in text_lower for kw in AI_FILTER_KEYWORDS)
+
+
+def search_toutiao_hotboard():
+    """Fetch Toutiao hot board (free, no API key needed)."""
+    import requests
+    results = []
+    try:
+        resp = requests.get(
+            "https://www.toutiao.com/hot-event/hot-board/?origin=toutiao_pc",
+            headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"},
+            timeout=10,
+        )
+        data = resp.json()
+        if data.get("status") == "success":
+            for item in data.get("data", []):
+                title = item.get("Title", "")
+                if is_ai_related(title):
+                    results.append({
+                        "title": title,
+                        "url": item.get("Url", ""),
+                        "source": "今日头条",
+                        "body": "",
+                        "keyword": "toutiao-hotboard",
+                        "platform": "toutiao",
+                        "hot_value": item.get("HotValue", 0),
+                    })
+            print(f"  [toutiao] {len(results)} AI-related items from {len(data.get('data', []))} total")
+    except Exception as e:
+        print(f"  [warn] toutiao hotboard failed: {e}")
+    return results
+
+
+def search_tianapi(endpoint, name, api_key):
+    """Generic TianAPI searcher for different platforms."""
+    import requests
+    results = []
+    try:
+        resp = requests.get(
+            f"https://apis.tianapi.com/{endpoint}/index",
+            params={"key": api_key},
+            timeout=10,
+        )
+        data = resp.json()
+        if data.get("code") == 200:
+            news_list = data.get("result", {}).get("list", [])
+            if not news_list:
+                news_list = data.get("result", {}).get("newslist", [])
+            for item in news_list:
+                title = item.get("title", "") or item.get("word", "") or item.get("digest", "")
+                if title and is_ai_related(title):
+                    results.append({
+                        "title": title,
+                        "url": item.get("url", "") or item.get("mobileUrl", ""),
+                        "source": name,
+                        "body": item.get("digest", "") or item.get("description", ""),
+                        "keyword": f"tianapi-{endpoint}",
+                        "platform": name,
+                        "hot_value": item.get("hotnum", 0) or item.get("hotvalue", 0),
+                    })
+            print(f"  [{name}] {len(results)} AI-related items from {len(news_list)} total")
+        else:
+            print(f"  [warn] tianapi {name}: code={data.get('code')}, msg={data.get('msg', '')}")
+    except Exception as e:
+        print(f"  [warn] tianapi {name} failed: {e}")
+    return results
+
+
+def search_tianapi_all():
+    """Search all TianAPI endpoints if key is available."""
+    api_key = os.environ.get("TIANAPI_KEY", "")
+    if not api_key:
+        print("[info] TIANAPI_KEY not set, skipping TianAPI sources")
+        return []
+
+    results = []
+    # Douyin hotspot
+    results.extend(search_tianapi("douyinhot", "抖音", api_key))
+    # WeChat hotspot
+    results.extend(search_tianapi("wxhottopic", "微信", api_key))
+    # Toutiao hotspot (TianAPI version, complementary to free endpoint)
+    results.extend(search_tianapi("toutiaohot", "头条TianAPI", api_key))
+
+    print(f"[info] TianAPI total AI-related results: {len(results)}")
+    return results
+
+
 def deduplicate(items):
     """Remove duplicate titles."""
     seen = set()
@@ -101,18 +201,32 @@ def score_and_rank(items):
         if any(t in text.lower() for t in analysis_terms):
             category = "analysis"
 
+        # Platform hotspots get a bonus for having real engagement data
+        platform = item.get("platform", "")
+        hot_value = item.get("hot_value", 0)
+        if platform and hot_value:
+            # Normalize: very high hot_value (>1M) gets +1, moderate (>100K) gets +0.5
+            if hot_value > 1000000:
+                score += 1
+            elif hot_value > 100000:
+                score += 0.5
+        score = min(10, round(score))
+
         source = item.get("source", "")
         if "/" in source:
             source = source.split("/")[-1]
         if not source:
             source = item.get("keyword", "AI")
 
-        scored.append({
+        entry = {
             "title": item["title"][:30],
             "heat_score": score,
             "category": category,
             "source": source[:20],
-        })
+        }
+        if platform:
+            entry["platform"] = platform
+        scored.append(entry)
 
     scored.sort(key=lambda x: x["heat_score"], reverse=True)
     return scored[:12]
@@ -239,16 +353,34 @@ def main():
     keywords_cn = ["AI最新进展 2026", "OpenAI GPT最新消息", "中国AI 人工智能新闻"]
     keywords_en = ["OpenAI GPT Claude latest news", "AI startup funding 2026", "DeepSeek Gemini AI news"]
 
-    # Try Firecrawl first, fallback to DuckDuckGo
-    results = search_firecrawl(keywords_cn + keywords_en)
-    if len(results) < 5:
-        print("[info] Firecrawl insufficient, trying DuckDuckGo...")
+    all_results = []
+
+    # Source 1: Toutiao hot board (free, always available)
+    print("\n--- Toutiao Hot Board ---")
+    toutiao_results = search_toutiao_hotboard()
+    all_results.extend(toutiao_results)
+
+    # Source 2: TianAPI multi-platform (Douyin, WeChat, Toutiao)
+    print("\n--- TianAPI Multi-Platform ---")
+    tianapi_results = search_tianapi_all()
+    all_results.extend(tianapi_results)
+
+    # Source 3: Firecrawl keyword search
+    print("\n--- Firecrawl Search ---")
+    firecrawl_results = search_firecrawl(keywords_cn + keywords_en)
+    all_results.extend(firecrawl_results)
+
+    # Source 4: DuckDuckGo fallback (only if other sources insufficient)
+    if len(all_results) < 8:
+        print("\n--- DuckDuckGo Fallback ---")
         ddg_results = search_duckduckgo(keywords_cn + keywords_en, max_results=8)
-        results.extend(ddg_results)
+        all_results.extend(ddg_results)
+    else:
+        print(f"\n[info] Skipping DuckDuckGo (already have {len(all_results)} results)")
 
-    print(f"[info] Total raw results: {len(results)}")
+    print(f"\n[info] Total raw results: {len(all_results)}")
 
-    unique = deduplicate(results)
+    unique = deduplicate(all_results)
     print(f"[info] After dedup: {len(unique)}")
 
     if not unique:
@@ -257,6 +389,11 @@ def main():
 
     hotspots = score_and_rank(unique)
     print(f"[info] Final hotspots: {len(hotspots)}")
+
+    # Show summary
+    for i, h in enumerate(hotspots, 1):
+        plat = h.get("platform", "search")
+        print(f"  #{i} [{h['heat_score']}] {h['title']} ({h['source']}/{plat})")
 
     update_articles_html(hotspots, date_str)
     save_hotspots_json(hotspots, date_str)
