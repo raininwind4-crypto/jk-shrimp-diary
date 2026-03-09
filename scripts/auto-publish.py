@@ -106,24 +106,32 @@ def generate_outline(day_num, date_cn, hotspots):
         hotspot_lines.append(f"{i}. [{h['heat_score']}分] {h['title']} (来源:{h['source']}/{plat})")
     hotspot_context = "\n".join(hotspot_lines)
 
-    system_prompt = """你是「JK养虾」公众号的选题策划。你的任务是根据今日AI热点，策划一篇龙虾养成日记的大纲。
+    system_prompt = """你是「JK养虾」公众号的选题策划。这个公众号的定位是：用通俗易懂的方式，帮普通人看懂每天AI圈发生了什么大事。
 
-要求：
-- 选择1-2个最有话题性的热点作为主切入点
-- 用普通人能理解的角度解读，不要堆技术术语
-- 每个小节要有明确的信息增量和观点
-- 整体叙事要有递进逻辑，不是热点罗列
+你的任务：根据今日AI热点，策划一篇深度解读文章的大纲。
+
+核心要求：
+- 文章必须紧扣今天的真实AI热点事件，深度解读这些事件的背景、影响和意义
+- 选择2-3个最重要的热点深度展开，不是泛泛而谈
+- 每个热点要讲清楚：发生了什么 → 为什么重要 → 对普通人意味着什么
+- 必须包含可视化数据元素的设计（对比表格、时间线、数据排行等），标注在data_visual字段
+- 用普通人能理解的语言，不堆技术术语
+- 可以结合「龙虾养虾」的视角做类比，但文章主体必须是AI热点解读
 
 输出JSON格式（不要代码块标记）：
 {
-  "title": "Day N：标题（15字以内，口语化、有悬念）",
-  "hook": "开头50字：用什么事实或热点抓住读者",
+  "title": "Day N：标题（15字以内，口语化、有悬念，关联当天最大热点）",
+  "hook": "开头50字：用当天最炸裂的热点事实抓住读者",
   "sections": [
-    {"h2": "小节标题", "points": ["要讲的核心观点1", "要讲的核心观点2"], "data": "用什么具体数据支撑"},
-    ...
+    {
+      "h2": "小节标题（直接点明热点事件）",
+      "points": ["要解读的核心信息1", "要解读的核心信息2"],
+      "data": "用什么具体数据/事实支撑",
+      "data_visual": "这个章节需要什么可视化元素：comparison_table/timeline/ranking/progress_bar/stat_cards/none"
+    }
   ],
   "egg_title": "彩蛋标题",
-  "egg_idea": "彩蛋创意（数据对比、时间线、冷知识）",
+  "egg_idea": "彩蛋创意（数据对比、冷知识、意外关联）",
   "skills": ["Skill #N：一句话总结", "Skill #N+1：一句话总结"],
   "cta": "CTA引导语"
 }"""
@@ -133,7 +141,9 @@ def generate_outline(day_num, date_cn, hotspots):
 今日AI热点Top 8：
 {hotspot_context}
 
-请策划一篇龙虾养成日记的大纲。Skill编号从#13开始（上一篇到了#12）。"""
+请基于这些真实热点事件，策划一篇AI热点深度解读文章的大纲。
+要求：选2-3个最重磅的热点深度展开，至少2个章节需要设计数据可视化元素。
+Skill编号从#13开始（上一篇到了#12）。"""
 
     print("[info] Step 2a: Generating outline...")
     result = call_llm(system_prompt, user_prompt, max_tokens=1500, temperature=0.75)
@@ -160,33 +170,60 @@ def generate_article(day_num, date_cn, outline):
     day_str = f"{day_num:03d}"
     outline_json = json.dumps(outline, ensure_ascii=False, indent=2)
 
-    system_prompt = f"""你是「JK养虾」公众号的COO龙虾Agent，负责写「龙虾养成日记」。
+    system_prompt = f"""你是「JK养虾」公众号的主笔。公众号定位：用通俗易懂的方式，帮普通人看懂每天AI圈发生了什么。
 
 ## 写作身份
 - 你是AI Agent（龙虾COO），老板是人类创业者
-- 你用OpenClaw多Agent团队构建自动化内容生产系统
+- 你通过Openclaw多Agent团队自动追踪和解读AI热点
 - 项目从零开始，Day {day_str}是第{day_num}天（起始日2026年3月3日）
 
+## 核心原则：内容必须紧扣真实AI热点
+- 文章主体必须是对当天AI热点事件的深度解读
+- 每个章节必须围绕一个真实的热点事件展开
+- 讲清楚：发生了什么事 → 背景是什么 → 为什么重要 → 对普通人/行业意味着什么
+- 可以用养虾做类比帮助理解，但类比只是辅助，主体是AI热点本身
+- 禁止编造与热点无关的虚构故事
+
 ## 写作风格（死守这些规则）
-- 像跟朋友面对面聊天，口语化，有情绪起伏
+- 像跟朋友面对面聊AI新闻，口语化，有情绪起伏
 - 短句打节奏，长句讲道理，交替使用
-- 每段必须有一个独立观点或新信息，删掉所有废话
-- 必须用具体数字/事实/案例支撑观点，禁止空洞描述
-- 用<strong>加粗</strong>标注5-8处核心金句
-- 禁止：「首先其次最后」「总而言之」「综上所述」「值得注意的是」「需要指出的是」
+- 每段必须有一个独立信息点，删掉所有废话
+- 必须用具体数字/事实/引用支撑观点，禁止空洞描述
+- 用<strong>加粗</strong>标注5-8处核心信息点
+- 禁止：「首先其次最后」「总而言之」「综上所述」「值得注意的是」
 - 禁止：排比句、对偶句、四字成语堆砌
-- 开头必须用一个具体事实/热点/数据开头，禁止用"今天"开头
-- 技术概念要「翻译」成人话，假设读者是完全不懂技术的普通人
-- 适当穿插比喻和类比，让抽象概念具象化（比如：大模型迭代速度比奶茶上新还快）
+- 开头必须用一个具体的热点事实/数据开头，禁止用"今天"开头
+- 技术概念要「翻译」成人话，假设读者完全不懂技术
 
 ## 范文风格参考（模仿这种语感）
 "3月4日凌晨，通义千问技术负责人林俊旸在X上发了一句话：'me stepping down. bye my beloved qwen.' 13500个赞，1700条评论，整个中文AI圈炸了。而我们的热点追踪系统，6点准时抓到了这条新闻..."
 
+## 数据可视化（重要！）
+文章中必须包含2-3个数据可视化HTML元素，让文章图文并茂。可选类型：
+
+1. 对比表格 comparison_table：
+<div class="data-table"><table><thead><tr><th>项目</th><th>A</th><th>B</th></tr></thead><tbody><tr><td>xxx</td><td>xxx</td><td>xxx</td></tr></tbody></table></div>
+
+2. 数据卡片 stat_cards：
+<div class="stat-cards"><div class="stat-card"><div class="stat-number">数字</div><div class="stat-label">说明</div></div>...</div>
+
+3. 进度条/排行 ranking：
+<div class="ranking-chart"><div class="rank-item"><span class="rank-label">名称</span><div class="rank-bar" style="width:85%"><span>85分</span></div></div>...</div>
+
+4. 时间线 timeline：
+<div class="timeline"><div class="timeline-item"><div class="timeline-date">日期</div><div class="timeline-content">事件描述</div></div>...</div>
+
+5. 高亮数据框 highlight_box：
+<div class="highlight-box"><span class="highlight-num">核心数字</span><span class="highlight-text">解读说明</span></div>
+
+根据大纲中data_visual字段的指示，在对应章节插入合适的可视化元素。数据要真实、有信息量。
+
 ## 输出格式
 输出纯HTML片段（不含head/body/style标签），使用：
 - <h2>章节标题</h2>
-- <p>段落</p>，核心观点用<strong>加粗</strong>
+- <p>段落</p>，核心信息用<strong>加粗</strong>
 - <blockquote>引用/金句</blockquote>
+- 上述数据可视化HTML元素
 - <ul><li>列表</li></ul>
 - <hr> 分隔线
 - <div class="egg-section"><h2>彩蛋标题</h2>内容</div>
@@ -194,15 +231,16 @@ def generate_article(day_num, date_cn, outline):
 
 禁止输出markdown、代码块标记、任何非HTML内容。"""
 
-    user_prompt = f"""请按照以下大纲，写一篇2500-3500字的龙虾养成日记。
+    user_prompt = f"""请按照以下大纲，写一篇2500-3500字的AI热点深度解读文章。
 
 大纲：
 {outline_json}
 
 要求：
-- 严格按大纲的结构和观点展开，但文字要自然流畅，不要像在念大纲
-- 每个观点都要有具体的数据、案例或场景来支撑
-- 技术概念要翻译成普通人能懂的话
+- 紧扣真实AI热点事件深度展开，每个章节围绕一个具体热点
+- 讲清楚事件本身、背景、影响，让不懂技术的人也能看明白
+- 必须包含2-3个数据可视化HTML元素（表格、卡片、排行条等），按大纲data_visual字段设计
+- 数据可视化要有真实信息量，不是装饰
 - 结尾的Skill总结和彩蛋部分要精彩
 - 文章字数2500-3500字，宁多不少"""
 
@@ -242,6 +280,36 @@ def build_page_html(day_num, title, date_cn, content):
 
     if not css_block:
         css_block = ":root { --bg: #fafaf8; --text: #1a1a1a; }"
+
+    # Always append data visualization CSS
+    data_viz_css = """
+/* Data Visualization */
+.data-table { margin: 28px 0; overflow: hidden; border-radius: 10px; border: 1px solid #dde3e8; }
+.data-table table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.data-table thead { background: linear-gradient(135deg, #0077aa, #005580); }
+.data-table thead th { color: #fff; padding: 12px 16px; text-align: left; font-weight: 600; }
+.data-table tbody tr { border-bottom: 1px solid #eef1f4; }
+.data-table tbody tr:nth-child(even) { background: #f8fafb; }
+.data-table tbody td { padding: 11px 16px; color: #333; }
+.stat-cards { display: flex; gap: 14px; margin: 28px 0; flex-wrap: wrap; }
+.stat-card { flex: 1; min-width: 120px; background: linear-gradient(135deg, #f0f8ff, #e8f4f8); border-radius: 10px; padding: 20px 16px; text-align: center; border: 1px solid #d0e8f0; }
+.stat-number { font-size: 28px; font-weight: 900; color: #0077aa; display: block; line-height: 1.2; }
+.stat-label { font-size: 12px; color: #666; margin-top: 6px; display: block; }
+.ranking-chart { margin: 28px 0; }
+.rank-item { display: flex; align-items: center; margin-bottom: 10px; }
+.rank-label { width: 100px; font-size: 13px; color: #333; font-weight: 500; flex-shrink: 0; }
+.rank-bar { background: linear-gradient(90deg, #0077aa, #00a5d4); height: 28px; border-radius: 6px; display: flex; align-items: center; padding: 0 12px; }
+.rank-bar span { color: #fff; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.timeline { margin: 28px 0; padding-left: 24px; border-left: 3px solid #0077aa; }
+.timeline-item { margin-bottom: 20px; position: relative; }
+.timeline-item::before { content: ''; position: absolute; left: -30px; top: 6px; width: 12px; height: 12px; background: #0077aa; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 0 2px #0077aa; }
+.timeline-date { font-size: 12px; color: #0077aa; font-weight: 700; margin-bottom: 4px; }
+.timeline-content { font-size: 14px; color: #333; line-height: 1.6; }
+.highlight-box { display: flex; align-items: center; gap: 16px; background: linear-gradient(135deg, #fff8e1, #fff3cd); border-left: 4px solid #f5a623; border-radius: 0 10px 10px 0; padding: 20px 24px; margin: 24px 0; }
+.highlight-num { font-size: 36px; font-weight: 900; color: #e67e00; flex-shrink: 0; }
+.highlight-text { font-size: 15px; color: #555; line-height: 1.6; }
+"""
+    css_block += data_viz_css
 
     page = f"""<!DOCTYPE html>
 <html lang="zh-CN">
@@ -366,6 +434,32 @@ h1 {{
   margin: 32px 0; text-align: center;
 }}
 .cta-box p {{ font-weight: 500; font-size: 17px !important; color: #1a1a1a !important; }}
+/* === Data Visualization Styles === */
+.data-table {{ margin: 28px 0; overflow: hidden; border-radius: 10px; border: 1px solid #dde3e8; }}
+.data-table table {{ width: 100%; border-collapse: collapse; font-size: 14px; }}
+.data-table thead {{ background: linear-gradient(135deg, #0077aa, #005580); }}
+.data-table thead th {{ color: #fff; padding: 12px 16px; text-align: left; font-weight: 600; font-size: 13px; letter-spacing: 0.3px; }}
+.data-table tbody tr {{ border-bottom: 1px solid #eef1f4; }}
+.data-table tbody tr:nth-child(even) {{ background: #f8fafb; }}
+.data-table tbody tr:hover {{ background: #edf5fa; }}
+.data-table tbody td {{ padding: 11px 16px; color: #333; }}
+.stat-cards {{ display: flex; gap: 14px; margin: 28px 0; flex-wrap: wrap; }}
+.stat-card {{ flex: 1; min-width: 120px; background: linear-gradient(135deg, #f0f8ff, #e8f4f8); border-radius: 10px; padding: 20px 16px; text-align: center; border: 1px solid #d0e8f0; }}
+.stat-number {{ font-size: 28px; font-weight: 900; color: #0077aa; display: block; line-height: 1.2; font-family: 'Noto Serif SC', Georgia, serif; }}
+.stat-label {{ font-size: 12px; color: #666; margin-top: 6px; display: block; }}
+.ranking-chart {{ margin: 28px 0; }}
+.rank-item {{ display: flex; align-items: center; margin-bottom: 10px; }}
+.rank-label {{ width: 100px; font-size: 13px; color: #333; font-weight: 500; flex-shrink: 0; }}
+.rank-bar {{ background: linear-gradient(90deg, #0077aa, #00a5d4); height: 28px; border-radius: 6px; display: flex; align-items: center; padding: 0 12px; transition: width 0.3s; }}
+.rank-bar span {{ color: #fff; font-size: 12px; font-weight: 600; white-space: nowrap; }}
+.timeline {{ margin: 28px 0; padding-left: 24px; border-left: 3px solid #0077aa; }}
+.timeline-item {{ margin-bottom: 20px; position: relative; }}
+.timeline-item::before {{ content: ''; position: absolute; left: -30px; top: 6px; width: 12px; height: 12px; background: #0077aa; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 0 2px #0077aa; }}
+.timeline-date {{ font-size: 12px; color: #0077aa; font-weight: 700; margin-bottom: 4px; }}
+.timeline-content {{ font-size: 14px; color: #333; line-height: 1.6; }}
+.highlight-box {{ display: flex; align-items: center; gap: 16px; background: linear-gradient(135deg, #fff8e1, #fff3cd); border-left: 4px solid #f5a623; border-radius: 0 10px 10px 0; padding: 20px 24px; margin: 24px 0; }}
+.highlight-num {{ font-size: 36px; font-weight: 900; color: #e67e00; font-family: 'Noto Serif SC', Georgia, serif; flex-shrink: 0; }}
+.highlight-text {{ font-size: 15px; color: #555; line-height: 1.6; }}
 .footer {{
   margin-top: 48px; padding-top: 24px;
   border-top: 1px solid #e8e8e5; text-align: center;
