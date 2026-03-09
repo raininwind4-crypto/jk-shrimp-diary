@@ -460,6 +460,15 @@ def screenshot_and_split(html_content, output_dir, num_parts=3):
 # ============================================================
 # Step 5: WeChat functions
 # ============================================================
+def get_current_ip():
+    """Get current public IP for whitelist debugging."""
+    try:
+        resp = requests.get("https://api.ipify.org?format=json", timeout=5)
+        return resp.json().get("ip", "unknown")
+    except Exception:
+        return "unknown"
+
+
 def get_wx_access_token():
     """Get WeChat access token."""
     if not WX_APPID or not WX_APPSECRET:
@@ -472,7 +481,16 @@ def get_wx_access_token():
         print("[ok] WeChat access token obtained")
         return data["access_token"]
     else:
-        print(f"[warn] WeChat token failed: {data}")
+        errcode = data.get("errcode", 0)
+        if errcode == 40164:
+            current_ip = get_current_ip()
+            print(f"[ACTION REQUIRED] WeChat IP whitelist error!")
+            print(f"  Current runner IP: {current_ip}")
+            print(f"  Please add this IP to WeChat whitelist:")
+            print(f"  微信公众平台 → 设置与开发 → 基本配置 → IP白名单 → 添加: {current_ip}")
+            print(f"  Full error: {data.get('errmsg', '')}")
+        else:
+            print(f"[warn] WeChat token failed: {data}")
         return None
 
 
