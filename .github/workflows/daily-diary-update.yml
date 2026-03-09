@@ -1,13 +1,14 @@
-name: Daily Diary Update
+name: Daily Auto-Publish
 
 on:
   schedule:
-    # CST 0:00 = UTC 16:00 (previous day)
-    - cron: '0 16 * * *'
+    # CST 7:00 = UTC 23:00 (previous day)
+    # Runs 1 hour after hotspot update to ensure fresh data
+    - cron: '0 23 * * *'
   workflow_dispatch: # Allow manual trigger
 
 jobs:
-  update-diary:
+  auto-publish:
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -21,8 +22,16 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Run diary updater
-        run: python scripts/update-diary.py
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Run auto-publish pipeline
+        env:
+          VOLCENGINE_API_KEY: ${{ secrets.VOLCENGINE_API_KEY }}
+          WX_APPID: ${{ secrets.WX_APPID }}
+          WX_APPSECRET: ${{ secrets.WX_APPSECRET }}
+          WX_COVER_MEDIA_ID: ${{ secrets.WX_COVER_MEDIA_ID }}
+        run: python scripts/auto-publish.py
 
       - name: Commit and push changes
         run: |
@@ -32,6 +41,6 @@ jobs:
           if git diff --staged --quiet; then
             echo "No changes to commit"
           else
-            git commit -m "auto: update diary day counter $(date -u +%Y-%m-%d)"
+            git commit -m "auto: publish day article $(date -u +%Y-%m-%d)"
             git push
           fi
