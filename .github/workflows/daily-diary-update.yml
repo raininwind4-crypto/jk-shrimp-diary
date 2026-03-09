@@ -23,7 +23,9 @@ jobs:
           python-version: '3.12'
 
       - name: Install dependencies
-        run: pip install requests
+        run: |
+          pip install requests pillow playwright
+          playwright install chromium --with-deps
 
       - name: Run auto-publish pipeline
         env:
