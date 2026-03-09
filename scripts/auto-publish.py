@@ -29,7 +29,7 @@ WX_APPID = os.environ.get("WX_APPID", "")
 WX_APPSECRET = os.environ.get("WX_APPSECRET", "")
 WX_COVER_MEDIA_ID = os.environ.get("WX_COVER_MEDIA_ID", "")
 
-WX_IMAGE_WIDTH = 900
+WX_IMAGE_WIDTH = 375  # Mobile viewport for screenshot mode
 
 # Cover image color themes for variety
 COVER_THEMES = [
@@ -91,6 +91,96 @@ def clean_json(text):
 def clean_html(text):
     text = re.sub(r'^```html?\s*\n?', '', text.strip())
     return re.sub(r'\n?```\s*$', '', text)
+
+
+# Tags that indicate complex visuals needing screenshot mode
+COMPLEX_VIZ_TAGS = [
+    "data-table", "ranking-chart", "stat-cards", "stat-card",
+    "timeline", "highlight-box", "rank-item", "rank-bar",
+]
+
+def has_complex_visuals(html_content):
+    """Check if HTML content contains complex data viz that needs screenshot rendering."""
+    content_lower = html_content.lower()
+    for tag in COMPLEX_VIZ_TAGS:
+        if f'class="{tag}"' in content_lower or f"class='{tag}'" in content_lower:
+            return True
+    # Also check for <table> elements
+    if "<table" in content_lower:
+        return True
+    return False
+
+
+def build_wechat_text_html(title, date_cn, content, tag="AI深度解读"):
+    """Build inline-styled HTML for WeChat text-mode articles (no screenshot needed)."""
+    # WeChat strips <style> blocks, so all styles must be inline
+    # Convert semantic HTML to inline-styled HTML for WeChat
+    html = content
+
+    # h2 headings
+    html = re.sub(
+        r'<h2>(.*?)</h2>',
+        r'<h2 style="font-size:20px;font-weight:700;color:#1a1a1a;margin:32px 0 16px;padding-bottom:8px;border-bottom:2px solid #0077aa;">\1</h2>',
+        html
+    )
+
+    # paragraphs
+    html = re.sub(
+        r'<p>(.*?)</p>',
+        r'<p style="margin-bottom:16px;font-size:16px;color:#333;line-height:1.9;">\1</p>',
+        html, flags=re.DOTALL
+    )
+
+    # strong
+    html = re.sub(
+        r'<strong>(.*?)</strong>',
+        r'<strong style="color:#1a1a1a;font-weight:700;">\1</strong>',
+        html
+    )
+
+    # blockquote
+    html = re.sub(
+        r'<blockquote>(.*?)</blockquote>',
+        r'<blockquote style="border-left:4px solid #0077aa;background:#e8f4f8;padding:16px 20px;margin:20px 0;border-radius:0 8px 8px 0;font-size:15px;color:#555;">\1</blockquote>',
+        html, flags=re.DOTALL
+    )
+
+    # ul/li
+    html = re.sub(r'<ul>', '<ul style="margin:12px 0 20px 24px;">', html)
+    html = re.sub(
+        r'<li>(.*?)</li>',
+        r'<li style="margin-bottom:8px;font-size:16px;color:#333;line-height:1.8;">\1</li>',
+        html, flags=re.DOTALL
+    )
+
+    # hr
+    html = html.replace('<hr>', '<hr style="border:none;border-top:1px solid #e8e8e5;margin:32px 0;">')
+    html = html.replace('<hr/>', '<hr style="border:none;border-top:1px solid #e8e8e5;margin:32px 0;">')
+    html = html.replace('<hr />', '<hr style="border:none;border-top:1px solid #e8e8e5;margin:32px 0;">')
+
+    # cta-box
+    html = re.sub(
+        r'<div class="cta-box">(.*?)</div>',
+        r'<div style="background:#fff;border:2px solid #0077aa;border-radius:12px;padding:24px 20px;margin:28px 0;text-align:center;">\1</div>',
+        html, flags=re.DOTALL
+    )
+
+    # Wrap with header
+    header = (
+        f'<div style="margin-bottom:28px;padding-bottom:16px;border-bottom:1px solid #e8e8e5;">'
+        f'<span style="display:inline-block;font-size:12px;color:#0077aa;background:#e8f4f8;padding:3px 12px;border-radius:4px;margin-bottom:12px;">{tag}</span>'
+        f'<h1 style="font-size:24px;font-weight:700;color:#1a1a1a;line-height:1.4;margin-bottom:10px;">{title}</h1>'
+        f'<p style="font-size:13px;color:#888;">JK养虾 · {date_cn} · Openclaw Agent</p>'
+        f'</div>'
+    )
+
+    footer = (
+        '<div style="margin-top:36px;padding-top:16px;border-top:1px solid #e8e8e5;text-align:center;">'
+        '<p style="font-size:13px;color:#888;">关注公众号「JK养虾」，每天一篇AI深度解读</p>'
+        '</div>'
+    )
+
+    return header + html + footer
 
 
 # ============================================================
@@ -418,56 +508,57 @@ def screenshot_and_split(html_content, output_dir, num_parts=3):
 # Build render HTML (for WeChat screenshot)
 # ============================================================
 DATA_VIZ_CSS = """
-.data-table {{ margin:28px 0; overflow:hidden; border-radius:10px; border:1px solid #dde3e8; }}
-.data-table table {{ width:100%; border-collapse:collapse; font-size:14px; }}
+.data-table {{ margin:20px 0; overflow-x:auto; border-radius:8px; border:1px solid #dde3e8; }}
+.data-table table {{ width:100%; border-collapse:collapse; font-size:12px; }}
 .data-table thead {{ background:linear-gradient(135deg,#0077aa,#005580); }}
-.data-table thead th {{ color:#fff; padding:12px 16px; text-align:left; font-weight:600; }}
+.data-table thead th {{ color:#fff; padding:8px 10px; text-align:left; font-weight:600; white-space:nowrap; }}
 .data-table tbody tr {{ border-bottom:1px solid #eef1f4; }}
 .data-table tbody tr:nth-child(even) {{ background:#f8fafb; }}
-.data-table tbody td {{ padding:11px 16px; color:#333; }}
-.stat-cards {{ display:flex; gap:14px; margin:28px 0; flex-wrap:wrap; }}
-.stat-card {{ flex:1; min-width:120px; background:linear-gradient(135deg,#f0f8ff,#e8f4f8); border-radius:10px; padding:20px 16px; text-align:center; border:1px solid #d0e8f0; }}
-.stat-number {{ font-size:28px; font-weight:900; color:#0077aa; display:block; line-height:1.2; }}
-.stat-label {{ font-size:12px; color:#666; margin-top:6px; display:block; }}
-.ranking-chart {{ margin:28px 0; }}
-.rank-item {{ display:flex; align-items:center; margin-bottom:10px; }}
-.rank-label {{ width:100px; font-size:13px; color:#333; font-weight:500; flex-shrink:0; }}
-.rank-bar {{ background:linear-gradient(90deg,#0077aa,#00a5d4); height:28px; border-radius:6px; display:flex; align-items:center; padding:0 12px; }}
-.rank-bar span {{ color:#fff; font-size:12px; font-weight:600; white-space:nowrap; }}
-.timeline {{ margin:28px 0; padding-left:24px; border-left:3px solid #0077aa; }}
-.timeline-item {{ margin-bottom:20px; position:relative; }}
-.timeline-item::before {{ content:''; position:absolute; left:-30px; top:6px; width:12px; height:12px; background:#0077aa; border-radius:50%; border:2px solid #fff; box-shadow:0 0 0 2px #0077aa; }}
-.timeline-date {{ font-size:12px; color:#0077aa; font-weight:700; margin-bottom:4px; }}
-.timeline-content {{ font-size:14px; color:#333; line-height:1.6; }}
-.highlight-box {{ display:flex; align-items:center; gap:16px; background:linear-gradient(135deg,#fff8e1,#fff3cd); border-left:4px solid #f5a623; border-radius:0 10px 10px 0; padding:20px 24px; margin:24px 0; }}
-.highlight-num {{ font-size:36px; font-weight:900; color:#e67e00; flex-shrink:0; }}
-.highlight-text {{ font-size:15px; color:#555; line-height:1.6; }}
-.cta-box {{ background:#fff; border:2px solid #0077aa; border-radius:12px; padding:28px 24px; margin:32px 0; text-align:center; }}
-.cta-box p {{ font-weight:500; font-size:17px !important; color:#1a1a1a !important; }}
+.data-table tbody td {{ padding:8px 10px; color:#333; }}
+.stat-cards {{ display:flex; gap:8px; margin:20px 0; flex-wrap:wrap; }}
+.stat-card {{ flex:1; min-width:80px; background:linear-gradient(135deg,#f0f8ff,#e8f4f8); border-radius:8px; padding:14px 10px; text-align:center; border:1px solid #d0e8f0; }}
+.stat-number {{ font-size:22px; font-weight:900; color:#0077aa; display:block; line-height:1.2; }}
+.stat-label {{ font-size:11px; color:#666; margin-top:4px; display:block; }}
+.ranking-chart {{ margin:20px 0; }}
+.rank-item {{ display:flex; align-items:center; margin-bottom:8px; }}
+.rank-label {{ width:70px; font-size:12px; color:#333; font-weight:500; flex-shrink:0; }}
+.rank-bar {{ background:linear-gradient(90deg,#0077aa,#00a5d4); height:24px; border-radius:5px; display:flex; align-items:center; padding:0 8px; }}
+.rank-bar span {{ color:#fff; font-size:10px; font-weight:600; white-space:nowrap; }}
+.timeline {{ margin:20px 0; padding-left:18px; border-left:2px solid #0077aa; }}
+.timeline-item {{ margin-bottom:14px; position:relative; }}
+.timeline-item::before {{ content:''; position:absolute; left:-23px; top:5px; width:10px; height:10px; background:#0077aa; border-radius:50%; border:2px solid #fff; box-shadow:0 0 0 2px #0077aa; }}
+.timeline-date {{ font-size:11px; color:#0077aa; font-weight:700; margin-bottom:3px; }}
+.timeline-content {{ font-size:13px; color:#333; line-height:1.5; }}
+.highlight-box {{ display:flex; align-items:center; gap:12px; background:linear-gradient(135deg,#fff8e1,#fff3cd); border-left:3px solid #f5a623; border-radius:0 8px 8px 0; padding:14px 16px; margin:18px 0; }}
+.highlight-num {{ font-size:28px; font-weight:900; color:#e67e00; flex-shrink:0; }}
+.highlight-text {{ font-size:13px; color:#555; line-height:1.5; }}
+.cta-box {{ background:#fff; border:2px solid #0077aa; border-radius:10px; padding:18px 16px; margin:24px 0; text-align:center; }}
+.cta-box p {{ font-weight:500; font-size:14px !important; color:#1a1a1a !important; }}
 """
 
 def build_render_html(title, date_cn, content, tag="AI深度解读"):
+    """Build HTML for mobile-viewport screenshot (375px wide, like iPhone)."""
     return f"""<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8">
 <meta name="viewport" content="width={WX_IMAGE_WIDTH}">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&family=Noto+Serif+SC:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
 * {{ margin:0; padding:0; box-sizing:border-box; }}
-body {{ width:{WX_IMAGE_WIDTH}px; font-family:'Noto Sans SC',-apple-system,sans-serif; background:#fafaf8; color:#1a1a1a; line-height:1.9; }}
-.wrapper {{ padding:48px 56px 60px; }}
-.tag {{ display:inline-block; font-size:12px; font-weight:500; color:#0077aa; background:#e8f4f8; padding:4px 14px; border-radius:4px; margin-bottom:18px; }}
-h1 {{ font-family:'Noto Serif SC',Georgia,serif; font-size:32px; font-weight:700; line-height:1.4; margin-bottom:14px; }}
-.meta {{ font-size:13px; color:#888; margin-bottom:36px; padding-bottom:20px; border-bottom:1px solid #e8e8e5; }}
+body {{ width:{WX_IMAGE_WIDTH}px; font-family:'Noto Sans SC',-apple-system,sans-serif; background:#fafaf8; color:#1a1a1a; line-height:1.8; }}
+.wrapper {{ padding:24px 20px 32px; }}
+.tag {{ display:inline-block; font-size:11px; font-weight:500; color:#0077aa; background:#e8f4f8; padding:3px 10px; border-radius:4px; margin-bottom:12px; }}
+h1 {{ font-family:'Noto Serif SC',Georgia,serif; font-size:22px; font-weight:700; line-height:1.35; margin-bottom:10px; }}
+.meta {{ font-size:11px; color:#888; margin-bottom:20px; padding-bottom:12px; border-bottom:1px solid #e8e8e5; }}
 .meta span + span::before {{ content:" · "; }}
-.content h2 {{ font-family:'Noto Serif SC',Georgia,serif; font-size:22px; font-weight:700; margin:44px 0 18px; padding-bottom:10px; border-bottom:2px solid #0077aa; }}
-.content p {{ margin-bottom:18px; font-size:16px; color:#333; }}
+.content h2 {{ font-family:'Noto Serif SC',Georgia,serif; font-size:18px; font-weight:700; margin:28px 0 12px; padding-bottom:8px; border-bottom:2px solid #0077aa; }}
+.content p {{ margin-bottom:14px; font-size:15px; color:#333; }}
 .content strong {{ color:#1a1a1a; font-weight:700; }}
-.content blockquote {{ border-left:4px solid #0077aa; background:#e8f4f8; padding:16px 20px; margin:24px 0; border-radius:0 8px 8px 0; font-size:15px; color:#555; }}
-.content ul,.content ol {{ margin:16px 0 24px 24px; }}
-.content li {{ margin-bottom:8px; font-size:16px; color:#333; }}
-.content hr {{ border:none; border-top:1px solid #e8e8e5; margin:40px 0; }}
+.content blockquote {{ border-left:3px solid #0077aa; background:#e8f4f8; padding:12px 14px; margin:16px 0; border-radius:0 8px 8px 0; font-size:14px; color:#555; }}
+.content ul,.content ol {{ margin:12px 0 18px 20px; }}
+.content li {{ margin-bottom:6px; font-size:15px; color:#333; }}
+.content hr {{ border:none; border-top:1px solid #e8e8e5; margin:24px 0; }}
 {DATA_VIZ_CSS}
-.footer {{ margin-top:48px; padding-top:24px; border-top:1px solid #e8e8e5; text-align:center; }}
-.footer p {{ font-size:13px; color:#888; margin-bottom:6px; }}
+.footer {{ margin-top:28px; padding-top:16px; border-top:1px solid #e8e8e5; text-align:center; }}
+.footer p {{ font-size:11px; color:#888; margin-bottom:4px; }}
 </style></head><body>
 <div class="wrapper">
   <span class="tag">{tag}</span>
@@ -517,8 +608,8 @@ def build_diary_page_html(day_num, title, date_cn, content):
 # Process one article: cover + screenshot + upload + draft
 # ============================================================
 def process_article(access_token, title, content, digest, theme_idx, tmpdir, tag="AI深度解读"):
-    """Full pipeline for one article: cover → render → screenshot → upload → draft."""
-    # 1. Generate cover image
+    """Full pipeline for one article. Auto-selects image or text mode."""
+    # 1. Generate cover image (always needed)
     cover_path = os.path.join(tmpdir, f"cover_{theme_idx}.jpg")
     generate_cover_image(title, tag, theme_idx, cover_path)
 
@@ -528,25 +619,40 @@ def process_article(access_token, title, content, digest, theme_idx, tmpdir, tag
         if mid:
             cover_media_id = mid
 
-    # 2. Render HTML → screenshot → split
-    render_html = build_render_html(title, get_date_cn(), content, tag)
-    image_paths = screenshot_and_split(render_html, tmpdir, num_parts=2)
-
-    if not image_paths or not access_token:
+    if not access_token:
         return None
 
-    # 3. Upload content images
-    image_urls = []
-    for img_path in image_paths:
-        mid, wx_url = upload_wx_image(access_token, img_path)
-        if wx_url:
-            image_urls.append(wx_url)
+    # 2. Decide mode: image (screenshot) vs text (inline HTML)
+    use_image_mode = has_complex_visuals(content)
+    mode_label = "IMAGE" if use_image_mode else "TEXT"
+    print(f"  [mode] {mode_label} — {'has data viz elements' if use_image_mode else 'plain text, pushing HTML directly'}")
 
-    if not image_urls:
-        return None
+    if use_image_mode:
+        # IMAGE MODE: render with mobile viewport → screenshot → split → upload images
+        render_html = build_render_html(title, get_date_cn(), content, tag)
+        image_paths = screenshot_and_split(render_html, tmpdir, num_parts=2)
 
-    # 4. Push draft
-    wechat_html = build_image_article_html(image_urls)
+        if not image_paths:
+            print("  [warn] Screenshot failed, falling back to text mode")
+            use_image_mode = False
+
+    if use_image_mode:
+        # Upload content images
+        image_urls = []
+        for img_path in image_paths:
+            mid, wx_url = upload_wx_image(access_token, img_path)
+            if wx_url:
+                image_urls.append(wx_url)
+
+        if not image_urls:
+            return None
+
+        wechat_html = build_image_article_html(image_urls)
+    else:
+        # TEXT MODE: push inline-styled HTML directly
+        wechat_html = build_wechat_text_html(title, get_date_cn(), content, tag)
+
+    # 3. Push draft
     return push_to_wechat_draft(access_token, title, wechat_html, digest, cover_media_id)
 
 
