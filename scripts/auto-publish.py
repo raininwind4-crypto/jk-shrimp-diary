@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-JK养虾 Auto-Publish Pipeline v3.
+JK养虾 Auto-Publish Pipeline v4.
 Produces 4 articles daily:
-  - 3 AI hotspot deep-dive articles (1 topic each, with data viz)
+  - 3 AI hotspot deep-dive articles (JSON→rich dark-theme HTML→screenshot)
   - 1 龙虾养成日记 (diary, posted to website)
 All 4 pushed to WeChat draft box. Each gets a unique cover image.
 """
@@ -226,72 +226,141 @@ def select_topics(hotspots):
 
 
 # ============================================================
-# Step 2: Generate single-topic deep-dive article
+# Step 2: Generate single-topic deep-dive article (V4 JSON mode)
 # ============================================================
-HOTSPOT_ARTICLE_SYSTEM = """你是「JK养虾」公众号的主笔。公众号定位：用通俗易懂的方式，帮普通人看懂AI圈大事。
+HOTSPOT_ARTICLE_SYSTEM_V4 = """你是「JK养虾」公众号的主笔。公众号定位：用通俗易懂的方式，帮普通人看懂AI圈大事。
 
 ## 核心原则
 - 本文只聚焦一个AI热点话题，写深写透
-- 结构：事件本身 → 背景/原因 → 深度分析（独特视角）→ 对普通人的影响 → 实用建议
-- 读者读完要有「学到东西了」的感觉，不是「又看了条新闻」
+- 结构：核心要点 → 关键数据 → 事件背景/对比分析 → 对普通人的影响 → 实用建议
+- 读者读完要有「学到东西了」的感觉
+- 必须包含具体数字、事实、对比数据（不许空洞描述）
 
 ## 写作风格
-- 像跟朋友面对面聊，口语化，有情绪
-- 每段一个独立信息点，删掉废话
-- 用具体数字/事实/引用支撑，禁止空洞描述
-- 用<strong>加粗</strong>标注4-6处核心信息
+- 口语化，像跟朋友面对面聊
+- 用**加粗**标注核心信息
 - 禁止：「首先其次最后」「总而言之」「值得注意的是」
 - 禁止：排比句、四字成语堆砌
-- 开头用具体事实/数据切入，禁止用"今天"开头
 - 技术概念翻译成人话
 
-## 数据可视化（必须包含1-2个）
-根据指定的data_visual类型，在文中插入对应HTML元素：
-
-comparison_table:
-<div class="data-table"><table><thead><tr><th>项目</th><th>A</th><th>B</th></tr></thead><tbody><tr><td>xxx</td><td>xxx</td><td>xxx</td></tr></tbody></table></div>
-
-stat_cards:
-<div class="stat-cards"><div class="stat-card"><div class="stat-number">数字</div><div class="stat-label">说明</div></div>...</div>
-
-ranking:
-<div class="ranking-chart"><div class="rank-item"><span class="rank-label">名称</span><div class="rank-bar" style="width:85%"><span>85分</span></div></div>...</div>
-
-timeline:
-<div class="timeline"><div class="timeline-item"><div class="timeline-date">日期</div><div class="timeline-content">事件</div></div>...</div>
-
-highlight_box:
-<div class="highlight-box"><span class="highlight-num">数字</span><span class="highlight-text">说明</span></div>
-
 ## 输出格式
-纯HTML片段（不含head/body/style），使用h2/p/strong/blockquote/ul/li/hr和上述可视化元素。
-末尾加：<div class="cta-box"><p><strong>CTA文案</strong></p></div>
-禁止输出markdown。"""
+输出纯JSON（不要代码块标记），结构如下：
+{
+  "title": "文章标题（15字以内）",
+  "subtitle": "一句话副标题，概括文章核心观点（30字以内）",
+  "sections": [
+    // 必须包含以下section类型的组合（5-8个section）：
+
+    // 核心要点（必须有，放在最前面）
+    {"type": "key_takeaways", "items": ["要点1（含**加粗**关键词）", "要点2", "要点3"]},
+
+    // 关键数字（必须有）
+    {"type": "stat_cards", "cards": [{"number": "数字", "label": "说明"}, ...]},
+
+    // 正文段落（可以有多个text section）
+    {"type": "text", "tag": "章节编号标签", "title": "章节标题", "content": "正文内容，段落之间用\\n\\n分隔，支持**加粗**"},
+
+    // 对比表格（推荐，适合产品对比/参数对比）
+    {"type": "comparison_table", "title": "表格标题",
+     "headers": ["列名1", "列名2", "列名3"],
+     "rows": [
+       {"cells": ["文本", {"text": "带标签", "badge": "green"}, "普通文本"], "highlight": false},
+       {"cells": ["高亮行", "内容", "内容"], "highlight": true}
+     ],
+     "note": "表格注释说明"},
+
+    // 时间线（适合事件回顾）
+    {"type": "timeline", "tag": "标签", "title": "时间线标题",
+     "events": [{"date": "日期", "title": "事件标题", "desc": "事件描述", "color": "blue/amber/green/red"}]},
+
+    // 重点提示框
+    {"type": "callout", "text": "提示内容，支持**加粗**", "variant": "amber/blue"},
+
+    // 排名条形图（适合评分/排名对比）
+    {"type": "ranking", "title": "排名标题",
+     "items": [{"label": "名称", "value": 85, "display": "85分"}]},
+
+    // 柱状图（适合数据趋势对比）
+    {"type": "bar_chart", "title": "图表标题",
+     "categories": ["类别1", "类别2"],
+     "series": [{"name": "系列名", "data": [10, 20]}]},
+
+    // 行动建议卡片（推荐，放在末尾前）
+    {"type": "action_cards", "tag": "标签", "title": "行动建议标题",
+     "cards": [{"title": "建议标题", "desc": "建议描述"}]},
+
+    // 利弊分析（可选）
+    {"type": "pros_cons", "title": "标题",
+     "pros": ["利好1", "利好2"], "cons": ["风险1", "风险2"]},
+
+    // 总结（可选）
+    {"type": "conclusion", "title": "总结标题", "text": "总结内容"},
+
+    // CTA（必须有，放最后）
+    {"type": "cta", "text": "**关注JK养虾**，每天一篇AI深度解读，不错过任何大事"}
+  ]
+}
+
+## 要求
+- sections数组5-8个元素
+- 必须有：key_takeaways、stat_cards、至少1个text、cta
+- 推荐有：comparison_table或ranking、action_cards
+- 数据可视化至少2个（stat_cards + table/ranking/bar_chart/timeline任选1）
+- 所有文本内容用**加粗**标注关键信息
+- badge值只能是：green/amber/red/blue
+- timeline的color值只能是：blue/amber/green/red"""
+
+
+def fallback_from_html(html_content, title="AI热点解读"):
+    """If LLM returns HTML instead of JSON, wrap it into a minimal article dict."""
+    return {
+        "title": title,
+        "subtitle": "AI热点深度解读",
+        "sections": [
+            {"type": "text", "content": html_content},
+            {"type": "cta", "text": "**关注JK养虾**，每天一篇AI深度解读"},
+        ]
+    }
+
 
 def generate_hotspot_article(topic, hotspots, day_num, date_cn):
-    """Generate a single deep-dive article for one topic."""
+    """Generate a single deep-dive article for one topic. Returns dict (JSON) or None."""
     idx = topic.get("hotspot_index", 0)
     hotspot = hotspots[idx] if idx < len(hotspots) else hotspots[0]
 
-    user_prompt = f"""请围绕以下话题，写一篇1500-2000字的深度解读文章。
+    user_prompt = f"""请围绕以下话题，写一篇深度解读文章（JSON格式输出）。
 
 话题：{topic['topic']}
 标题：{topic['title']}
 独特角度：{topic['angle']}
-可视化类型：{topic['data_visual']}
+推荐数据可视化：{topic['data_visual']}
 热点原文：{hotspot['title']}（来源：{hotspot.get('source', '')}）
 日期：{date_cn}
 
 要求：
-- 只聚焦这一个话题，写深写透，提供独特视角和分析
-- 包含1-2个指定类型的数据可视化HTML元素
-- 结尾给读者1条实用建议
-- 字数1500-2000字"""
+- 只聚焦这一个话题，写深写透
+- sections数组5-8个元素，必须包含key_takeaways、stat_cards、至少1个text、cta
+- 至少2个数据可视化section
+- 结尾有action_cards给读者实用建议
+- 输出纯JSON，不要代码块标记"""
 
-    result = call_llm(HOTSPOT_ARTICLE_SYSTEM, user_prompt, max_tokens=4000, temperature=0.72)
+    result = call_llm(HOTSPOT_ARTICLE_SYSTEM_V4, user_prompt, max_tokens=4000, temperature=0.72)
     if not result:
         return None
-    return clean_html(result)
+
+    # Try parsing as JSON
+    try:
+        article_data = json.loads(clean_json(result))
+        if isinstance(article_data, dict) and "sections" in article_data:
+            print(f"    [ok] JSON parsed: {len(article_data['sections'])} sections")
+            return article_data
+    except json.JSONDecodeError:
+        pass
+
+    # Fallback: treat as HTML
+    print(f"    [warn] JSON parse failed, using fallback")
+    html = clean_html(result)
+    return fallback_from_html(html, topic.get("title", "AI热点解读"))
 
 
 # ============================================================
@@ -462,7 +531,7 @@ def push_to_wechat_draft(access_token, title, wechat_html, digest, cover_media_i
 # ============================================================
 # Screenshot & split (reused from v2)
 # ============================================================
-def screenshot_and_split(html_content, output_dir, num_parts=3):
+def screenshot_and_split(html_content, output_dir, num_parts=3, wait_ms=2000):
     from PIL import Image
     html_path = os.path.join(output_dir, "render.html")
     with open(html_path, "w", encoding="utf-8") as f:
@@ -475,7 +544,7 @@ def screenshot_and_split(html_content, output_dir, num_parts=3):
             browser = p.chromium.launch()
             page = browser.new_page(viewport={"width": WX_IMAGE_WIDTH, "height": 800})
             page.goto(f"file://{html_path}", wait_until="networkidle", timeout=30000)
-            page.wait_for_timeout(2000)
+            page.wait_for_timeout(wait_ms)
             page.screenshot(path=full_screenshot, full_page=True)
             browser.close()
     except Exception as e:
@@ -535,6 +604,576 @@ DATA_VIZ_CSS = """
 .cta-box {{ background:#fff; border:2px solid #0077aa; border-radius:10px; padding:18px 16px; margin:24px 0; text-align:center; }}
 .cta-box p {{ font-weight:500; font-size:14px !important; color:#1a1a1a !important; }}
 """
+
+# ============================================================
+# V4 Dark Theme CSS (matches DeepSeek V4 reference report)
+# ============================================================
+DARK_THEME_CSS = """
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { background: #0b1120; font-family: 'Inter', 'Noto Sans SC', system-ui, sans-serif;
+  color: #94a3b8; line-height: 1.8; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+::selection { background: #3b82f644; color: #fff; }
+.wrapper { max-width: 375px; margin: 0 auto; padding: 0; }
+
+/* Cover */
+.cover { position: relative; padding: 40px 20px 32px; overflow: hidden; }
+.cover::before { content:''; position:absolute; inset:0;
+  background: radial-gradient(ellipse 80% 60% at 50% 30%, rgba(59,130,246,0.12) 0%, transparent 60%),
+  radial-gradient(ellipse 50% 40% at 80% 70%, rgba(245,158,11,0.08) 0%, transparent 55%); pointer-events:none; }
+.cover-grid { position:absolute; inset:0;
+  background-image: linear-gradient(rgba(59,130,246,0.04) 1px, transparent 1px),
+  linear-gradient(90deg, rgba(59,130,246,0.04) 1px, transparent 1px);
+  background-size: 40px 40px; pointer-events:none; }
+.cover-content { position: relative; z-index: 1; }
+.cover-date { font-family: 'JetBrains Mono', monospace; font-size: 10px;
+  letter-spacing: 0.2em; color: #3b82f6; text-transform: uppercase; margin-bottom: 16px; }
+.cover-title { font-family: 'Noto Serif SC', serif; font-weight: 900;
+  font-size: 28px; line-height: 1.25; color: #fff; letter-spacing: -0.02em; }
+.cover-subtitle { font-size: 14px; color: #94a3b8; line-height: 1.7; margin-top: 14px; }
+.cover-tag { display: inline-block; font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; letter-spacing: 0.15em; padding: 3px 10px; border-radius: 4px;
+  background: rgba(59,130,246,0.1); color: #3b82f6; border: 1px solid rgba(59,130,246,0.2);
+  margin-bottom: 14px; text-transform: uppercase; }
+.cover-brand { font-size: 11px; color: rgba(255,255,255,0.35); margin-top: 20px; }
+
+/* Sections */
+.section { padding: 24px 20px; }
+.section-tag { display: inline-block; font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase;
+  padding: 3px 10px; border-radius: 4px; background: rgba(59,130,246,0.1);
+  color: #3b82f6; border: 1px solid rgba(59,130,246,0.2); margin-bottom: 10px; }
+.section-h2 { font-family: 'Noto Serif SC', serif; font-weight: 700;
+  font-size: 20px; color: #fff; line-height: 1.35; margin-bottom: 16px; }
+.divider { height: 1px; background: linear-gradient(90deg, transparent, #1e293b, transparent); margin: 0; }
+
+/* Glass card */
+.glass { background: rgba(17,24,39,0.7); border: 1px solid #1e293b;
+  border-radius: 12px; backdrop-filter: blur(8px); padding: 20px 16px; margin: 16px 0; }
+
+/* Body text */
+p.body-text { color: #94a3b8; font-size: 14px; line-height: 1.9; margin-bottom: 14px; }
+p.body-text strong { color: #e2e8f0; }
+
+/* Key Takeaways */
+.kt-card { border: 1px solid rgba(59,130,246,0.25);
+  background: linear-gradient(135deg, rgba(59,130,246,0.04), rgba(245,158,11,0.03)); }
+.kt-label { font-family: 'JetBrains Mono', monospace; font-size: 9px;
+  letter-spacing: 0.15em; color: #3b82f6; margin-bottom: 12px; }
+.kt-item { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 10px; }
+.kt-num { font-family: 'JetBrains Mono', monospace; font-size: 13px;
+  font-weight: 700; color: #f59e0b; min-width: 18px; flex-shrink: 0; }
+.kt-text { font-size: 13px; color: #e2e8f0; line-height: 1.7; }
+.kt-text strong { color: #fff; }
+
+/* Stat cards */
+.stat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin: 14px 0; }
+.stat-card-v4 { text-align: center; padding: 16px 10px; }
+.stat-big { font-family: 'JetBrains Mono', monospace; font-weight: 600; font-size: 28px;
+  background: linear-gradient(135deg, #3b82f6, #06b6d4); -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent; background-clip: text; line-height: 1.2; }
+.stat-label { font-size: 11px; color: #94a3b8; margin-top: 4px; }
+
+/* Comparison table */
+.cmp-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 12px; }
+.cmp-table th { background: rgba(30,41,59,0.6); color: #e2e8f0; font-weight: 600;
+  padding: 8px 10px; text-align: left; border-bottom: 1px solid #1e293b;
+  font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; }
+.cmp-table td { padding: 8px 10px; border-bottom: 1px solid rgba(30,41,59,0.4);
+  color: #94a3b8; vertical-align: middle; font-size: 12px; }
+.cmp-table tr:last-child td { border-bottom: none; }
+.cmp-table .highlight-row { background: rgba(59,130,246,0.06); }
+.badge { display: inline-block; padding: 2px 8px; border-radius: 3px;
+  font-size: 10px; font-weight: 600; font-family: 'JetBrains Mono', monospace; }
+.badge-green { background: rgba(16,185,129,0.15); color: #10b981; }
+.badge-amber { background: rgba(245,158,11,0.15); color: #f59e0b; }
+.badge-red { background: rgba(239,68,68,0.15); color: #ef4444; }
+.badge-blue { background: rgba(59,130,246,0.15); color: #3b82f6; }
+.cmp-table .text-light { color: #e2e8f0; }
+
+/* Timeline */
+.timeline-track { position: relative; padding-left: 24px; }
+.timeline-track::before { content:''; position:absolute; left:6px; top:6px; bottom:6px;
+  width: 2px; background: linear-gradient(180deg, #3b82f6, #f59e0b 60%, #10b981); }
+.timeline-node { position: relative; padding-bottom: 18px; }
+.timeline-node::before { content:''; position:absolute; left:-20px; top:4px;
+  width: 10px; height: 10px; border-radius: 50%; background: #3b82f6;
+  border: 2px solid #0b1120; z-index: 1; }
+.timeline-node.node-amber::before { background: #f59e0b; }
+.timeline-node.node-green::before { background: #10b981; }
+.timeline-node.node-red::before { background: #ef4444; }
+.tl-date { font-family: 'JetBrains Mono', monospace; font-size: 10px;
+  color: #3b82f6; letter-spacing: 0.05em; }
+.node-amber .tl-date { color: #f59e0b; }
+.node-green .tl-date { color: #10b981; }
+.node-red .tl-date { color: #ef4444; }
+.tl-title { color: #e2e8f0; font-size: 13px; font-weight: 600; margin-top: 2px; }
+.tl-desc { color: #94a3b8; font-size: 11px; margin-top: 2px; line-height: 1.6; }
+
+/* Callout */
+.callout { border-left: 3px solid #f59e0b; padding: 14px 16px;
+  background: rgba(245,158,11,0.05); border-radius: 0 8px 8px 0; margin: 14px 0; }
+.callout-blue { border-left-color: #3b82f6; background: rgba(59,130,246,0.05); }
+.callout p { font-size: 13px; color: #e2e8f0; line-height: 1.8; }
+.callout strong { color: #fff; }
+
+/* Ranking bars */
+.rank-item { display: flex; align-items: center; margin-bottom: 8px; }
+.rank-label { width: 80px; font-size: 12px; color: #e2e8f0; font-weight: 500; flex-shrink: 0; }
+.rank-bar { height: 24px; border-radius: 5px; display: flex; align-items: center;
+  padding: 0 8px; background: linear-gradient(90deg, #3b82f6, #06b6d4); }
+.rank-bar span { color: #fff; font-size: 10px; font-weight: 600; white-space: nowrap; }
+
+/* Action cards */
+.action-grid { display: grid; grid-template-columns: 1fr; gap: 10px; margin: 14px 0; }
+.action-card { position: relative; overflow: hidden; padding: 16px; }
+.action-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; }
+.ac-blue::before { background: linear-gradient(90deg, #3b82f6, #06b6d4); }
+.ac-amber::before { background: linear-gradient(90deg, #f59e0b, #ef4444); }
+.ac-green::before { background: linear-gradient(90deg, #10b981, #3b82f6); }
+.ac-purple::before { background: linear-gradient(90deg, #8b5cf6, #3b82f6); }
+.action-num { font-family: 'JetBrains Mono', monospace; font-size: 32px;
+  font-weight: 700; line-height: 1; opacity: 0.1; position: absolute; top: 6px; right: 10px; color: #fff; }
+.action-title { font-size: 14px; color: #e2e8f0; font-weight: 600; margin-bottom: 4px; }
+.action-desc { font-size: 12px; color: #94a3b8; line-height: 1.6; }
+
+/* Pros/Cons */
+.proscons { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 14px 0; }
+.pros-col, .cons-col { padding: 14px; }
+.pros-col { border-top: 2px solid #10b981; }
+.cons-col { border-top: 2px solid #ef4444; }
+.pc-title { font-size: 12px; font-weight: 700; margin-bottom: 8px; }
+.pros-col .pc-title { color: #10b981; }
+.cons-col .pc-title { color: #ef4444; }
+.pc-item { font-size: 11px; color: #e2e8f0; margin-bottom: 6px; line-height: 1.5;
+  padding-left: 14px; position: relative; }
+.pc-item::before { content:''; position: absolute; left: 0; top: 6px;
+  width: 6px; height: 6px; border-radius: 50%; }
+.pros-col .pc-item::before { background: #10b981; }
+.cons-col .pc-item::before { background: #ef4444; }
+
+/* Conclusion */
+.conclusion { border: 1px solid rgba(59,130,246,0.3);
+  background: linear-gradient(135deg, rgba(59,130,246,0.06), rgba(6,182,212,0.04)); }
+.conclusion-title { font-family: 'Noto Serif SC', serif; font-size: 16px;
+  font-weight: 700; color: #fff; margin-bottom: 10px; }
+.conclusion-text { font-size: 13px; color: #e2e8f0; line-height: 1.8; }
+
+/* CTA */
+.cta-v4 { text-align: center; padding: 24px 16px; margin: 16px 0;
+  border: 1px solid rgba(59,130,246,0.3); background: rgba(59,130,246,0.05); }
+.cta-v4 p { font-size: 14px; color: #e2e8f0; font-weight: 500; }
+.cta-v4 strong { color: #fff; }
+
+/* ECharts container */
+.chart-box { width: 100%; height: 280px; margin: 14px 0; }
+
+/* Footer */
+.article-footer-v4 { padding: 20px; text-align: center; border-top: 1px solid #1e293b; }
+.article-footer-v4 p { font-size: 11px; color: rgba(255,255,255,0.3); }
+"""
+
+
+# ============================================================
+# V4 Section Renderers (JSON → HTML fragments)
+# ============================================================
+def _esc(text):
+    """HTML-escape a string."""
+    return str(text).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+
+def _md_inline(text):
+    """Convert **bold** and basic markdown inline to HTML."""
+    text = str(text)
+    text = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', text)
+    text = re.sub(r'\*(.*?)\*', r'<em>\1</em>', text)
+    return text
+
+
+def render_key_takeaways(sec):
+    items = sec.get("items", [])
+    if not items:
+        return ""
+    rows = []
+    for i, item in enumerate(items, 1):
+        rows.append(
+            f'<div class="kt-item">'
+            f'<div class="kt-num">{i}</div>'
+            f'<div class="kt-text">{_md_inline(item)}</div>'
+            f'</div>'
+        )
+    return (
+        f'<div class="section"><div class="glass kt-card">'
+        f'<div class="kt-label">KEY TAKEAWAYS / 全文核心要点</div>'
+        f'{"".join(rows)}'
+        f'</div></div>'
+    )
+
+
+def render_stat_cards(sec):
+    cards = sec.get("cards", [])
+    if not cards:
+        return ""
+    items = []
+    for c in cards:
+        items.append(
+            f'<div class="glass stat-card-v4">'
+            f'<div class="stat-big">{_esc(c.get("number", ""))}</div>'
+            f'<div class="stat-label">{_esc(c.get("label", ""))}</div>'
+            f'</div>'
+        )
+    return f'<div class="section"><div class="stat-grid">{"".join(items)}</div></div>'
+
+
+def render_text(sec):
+    content = sec.get("content", "")
+    if not content:
+        return ""
+    # Split paragraphs by double newlines
+    paras = [p.strip() for p in content.split("\n\n") if p.strip()]
+    if not paras:
+        paras = [content]
+    html_parts = []
+    for p in paras:
+        html_parts.append(f'<p class="body-text">{_md_inline(p)}</p>')
+    title = sec.get("title", "")
+    title_html = ""
+    if title:
+        tag = sec.get("tag", "")
+        tag_html = f'<div class="section-tag">{_esc(tag)}</div>' if tag else ""
+        title_html = f'{tag_html}<h2 class="section-h2">{_esc(title)}</h2>'
+    return f'<div class="section">{title_html}{"".join(html_parts)}</div>'
+
+
+def render_comparison_table(sec):
+    title = sec.get("title", "")
+    headers = sec.get("headers", [])
+    rows = sec.get("rows", [])
+    note = sec.get("note", "")
+    if not headers or not rows:
+        return ""
+    th = "".join(f'<th>{_esc(h)}</th>' for h in headers)
+    tbody_rows = []
+    for row in rows:
+        cells = row.get("cells", row) if isinstance(row, dict) else row
+        highlight = row.get("highlight", False) if isinstance(row, dict) else False
+        if isinstance(cells, dict):
+            cells = cells.get("cells", [])
+        tr_class = ' class="highlight-row"' if highlight else ""
+        tds = []
+        for j, cell in enumerate(cells):
+            if isinstance(cell, dict):
+                badge = cell.get("badge", "")
+                text = cell.get("text", "")
+                if badge:
+                    badge_cls = f"badge-{badge}" if badge in ("green", "amber", "red", "blue") else "badge-blue"
+                    tds.append(f'<td><span class="badge {badge_cls}">{_esc(text)}</span></td>')
+                else:
+                    cls = ' class="text-light"' if j == 0 else ""
+                    tds.append(f'<td{cls}>{_md_inline(text)}</td>')
+            else:
+                cls = ' class="text-light"' if j == 0 else ""
+                tds.append(f'<td{cls}>{_md_inline(cell)}</td>')
+        tbody_rows.append(f'<tr{tr_class}>{"".join(tds)}</tr>')
+    note_html = f'<p style="font-size:10px;color:#94a3b8;margin-top:10px;">{_md_inline(note)}</p>' if note else ""
+    title_html = f'<h3 style="color:#fff;font-weight:700;font-size:14px;margin-bottom:12px;">{_esc(title)}</h3>' if title else ""
+    return (
+        f'<div class="section"><div class="glass">{title_html}'
+        f'<div style="overflow-x:auto;"><table class="cmp-table">'
+        f'<thead><tr>{th}</tr></thead>'
+        f'<tbody>{"".join(tbody_rows)}</tbody>'
+        f'</table></div>{note_html}</div></div>'
+    )
+
+
+def render_timeline(sec):
+    events = sec.get("events", [])
+    if not events:
+        return ""
+    title = sec.get("title", "")
+    tag = sec.get("tag", "")
+    nodes = []
+    for ev in events:
+        color = ev.get("color", "blue")
+        node_cls = f"node-{color}" if color != "blue" else ""
+        nodes.append(
+            f'<div class="timeline-node {node_cls}">'
+            f'<div class="tl-date">{_esc(ev.get("date", ""))}</div>'
+            f'<div class="tl-title">{_esc(ev.get("title", ""))}</div>'
+            f'<div class="tl-desc">{_md_inline(ev.get("desc", ""))}</div>'
+            f'</div>'
+        )
+    tag_html = f'<div class="section-tag">{_esc(tag)}</div>' if tag else ""
+    title_html = f'{tag_html}<h2 class="section-h2">{_esc(title)}</h2>' if title else ""
+    return (
+        f'<div class="section">{title_html}'
+        f'<div class="glass"><div class="timeline-track">{"".join(nodes)}</div></div>'
+        f'</div>'
+    )
+
+
+def render_callout(sec):
+    text = sec.get("text", "")
+    if not text:
+        return ""
+    variant = sec.get("variant", "amber")
+    cls = "callout-blue" if variant == "blue" else "callout"
+    return f'<div class="section"><div class="{cls}"><p>{_md_inline(text)}</p></div></div>'
+
+
+def render_ranking(sec):
+    items = sec.get("items", [])
+    if not items:
+        return ""
+    title = sec.get("title", "")
+    rows = []
+    for item in items:
+        pct = item.get("value", 50)
+        rows.append(
+            f'<div class="rank-item">'
+            f'<div class="rank-label">{_esc(item.get("label", ""))}</div>'
+            f'<div class="rank-bar" style="width:{pct}%"><span>{_esc(item.get("display", str(pct)))}</span></div>'
+            f'</div>'
+        )
+    title_html = f'<h3 style="color:#fff;font-weight:700;font-size:14px;margin-bottom:12px;">{_esc(title)}</h3>' if title else ""
+    return f'<div class="section"><div class="glass">{title_html}{"".join(rows)}</div></div>'
+
+
+_chart_counter = 0
+
+def render_bar_chart(sec):
+    global _chart_counter
+    _chart_counter += 1
+    chart_id = f"chart-bar-{_chart_counter}"
+    title = sec.get("title", "")
+    title_html = f'<h3 style="color:#fff;font-weight:700;font-size:14px;margin-bottom:8px;">{_esc(title)}</h3>' if title else ""
+    return (
+        f'<div class="section"><div class="glass">{title_html}'
+        f'<div id="{chart_id}" class="chart-box"></div>'
+        f'</div></div>',
+        chart_id, sec
+    )
+
+
+def render_radar_chart(sec):
+    global _chart_counter
+    _chart_counter += 1
+    chart_id = f"chart-radar-{_chart_counter}"
+    title = sec.get("title", "")
+    title_html = f'<h3 style="color:#fff;font-weight:700;font-size:14px;margin-bottom:8px;">{_esc(title)}</h3>' if title else ""
+    return (
+        f'<div class="section"><div class="glass">{title_html}'
+        f'<div id="{chart_id}" class="chart-box"></div>'
+        f'</div></div>',
+        chart_id, sec
+    )
+
+
+def render_action_cards(sec):
+    cards = sec.get("cards", [])
+    if not cards:
+        return ""
+    title = sec.get("title", "")
+    colors = ["ac-blue", "ac-amber", "ac-green", "ac-purple"]
+    items = []
+    for i, card in enumerate(cards):
+        c = colors[i % len(colors)]
+        items.append(
+            f'<div class="glass action-card {c}">'
+            f'<div class="action-num">{i+1:02d}</div>'
+            f'<div class="action-title">{_esc(card.get("title", ""))}</div>'
+            f'<div class="action-desc">{_md_inline(card.get("desc", ""))}</div>'
+            f'</div>'
+        )
+    title_html = ""
+    tag = sec.get("tag", "")
+    if title:
+        tag_html = f'<div class="section-tag">{_esc(tag)}</div>' if tag else ""
+        title_html = f'{tag_html}<h2 class="section-h2">{_esc(title)}</h2>'
+    return f'<div class="section">{title_html}<div class="action-grid">{"".join(items)}</div></div>'
+
+
+def render_pros_cons(sec):
+    pros = sec.get("pros", [])
+    cons = sec.get("cons", [])
+    if not pros and not cons:
+        return ""
+    title = sec.get("title", "")
+    pro_items = "".join(f'<div class="pc-item">{_md_inline(p)}</div>' for p in pros)
+    con_items = "".join(f'<div class="pc-item">{_md_inline(c)}</div>' for c in cons)
+    title_html = f'<h3 style="color:#fff;font-weight:700;font-size:14px;margin-bottom:12px;">{_esc(title)}</h3>' if title else ""
+    return (
+        f'<div class="section">{title_html}<div class="proscons">'
+        f'<div class="glass pros-col"><div class="pc-title">&#x2705; 利好</div>{pro_items}</div>'
+        f'<div class="glass cons-col"><div class="pc-title">&#x26A0; 风险</div>{con_items}</div>'
+        f'</div></div>'
+    )
+
+
+def render_conclusion(sec):
+    title = sec.get("title", "总结")
+    text = sec.get("text", "")
+    if not text:
+        return ""
+    return (
+        f'<div class="section"><div class="glass conclusion">'
+        f'<div class="conclusion-title">{_esc(title)}</div>'
+        f'<div class="conclusion-text">{_md_inline(text)}</div>'
+        f'</div></div>'
+    )
+
+
+def render_cta(sec):
+    text = sec.get("text", "")
+    if not text:
+        return ""
+    return f'<div class="section"><div class="glass cta-v4"><p>{_md_inline(text)}</p></div></div>'
+
+
+# ============================================================
+# V4 Section Dispatcher & Rich HTML Builder
+# ============================================================
+SECTION_RENDERERS = {
+    "key_takeaways": render_key_takeaways,
+    "stat_cards": render_stat_cards,
+    "text": render_text,
+    "comparison_table": render_comparison_table,
+    "timeline": render_timeline,
+    "callout": render_callout,
+    "ranking": render_ranking,
+    "bar_chart": render_bar_chart,
+    "radar_chart": render_radar_chart,
+    "action_cards": render_action_cards,
+    "pros_cons": render_pros_cons,
+    "conclusion": render_conclusion,
+    "cta": render_cta,
+}
+
+
+def _build_echart_script(chart_id, sec):
+    """Generate ECharts initialization script for a chart section."""
+    chart_type = sec.get("type", "bar_chart")
+    if chart_type == "bar_chart":
+        categories = json.dumps(sec.get("categories", []), ensure_ascii=False)
+        series_data = sec.get("series", [])
+        series_json = []
+        for s in series_data:
+            series_json.append({
+                "name": s.get("name", ""),
+                "type": "bar",
+                "data": s.get("data", []),
+                "itemStyle": {"borderRadius": [4, 4, 0, 0]},
+            })
+        series_str = json.dumps(series_json, ensure_ascii=False)
+        return f"""
+var c_{chart_id.replace('-','_')} = echarts.init(document.getElementById('{chart_id}'));
+c_{chart_id.replace('-','_')}.setOption({{
+  backgroundColor: 'transparent',
+  tooltip: {{ trigger: 'axis' }},
+  legend: {{ textStyle: {{ color: '#94a3b8', fontSize: 10 }}, top: 0 }},
+  grid: {{ left: 50, right: 20, top: 40, bottom: 30 }},
+  xAxis: {{ type: 'category', data: {categories}, axisLabel: {{ color: '#94a3b8', fontSize: 9 }}, axisLine: {{ lineStyle: {{ color: '#1e293b' }} }} }},
+  yAxis: {{ type: 'value', axisLabel: {{ color: '#94a3b8', fontSize: 9 }}, splitLine: {{ lineStyle: {{ color: '#1e293b' }} }}, axisLine: {{ lineStyle: {{ color: '#1e293b' }} }} }},
+  series: {series_str}
+}});"""
+    elif chart_type == "radar_chart":
+        indicators = sec.get("indicators", [])
+        ind_json = json.dumps([{"name": i.get("name", ""), "max": i.get("max", 100)} for i in indicators], ensure_ascii=False)
+        series_data = sec.get("series", [])
+        series_json = []
+        for s in series_data:
+            series_json.append({"name": s.get("name", ""), "value": s.get("data", [])})
+        data_str = json.dumps(series_json, ensure_ascii=False)
+        return f"""
+var c_{chart_id.replace('-','_')} = echarts.init(document.getElementById('{chart_id}'));
+c_{chart_id.replace('-','_')}.setOption({{
+  backgroundColor: 'transparent',
+  legend: {{ textStyle: {{ color: '#94a3b8', fontSize: 10 }}, bottom: 0 }},
+  radar: {{ indicator: {ind_json}, shape: 'polygon',
+    axisName: {{ color: '#94a3b8', fontSize: 9 }},
+    splitLine: {{ lineStyle: {{ color: '#1e293b' }} }},
+    splitArea: {{ areaStyle: {{ color: ['transparent'] }} }},
+    axisLine: {{ lineStyle: {{ color: '#1e293b' }} }} }},
+  series: [{{ type: 'radar', data: {data_str},
+    areaStyle: {{ opacity: 0.15 }}, lineStyle: {{ width: 2 }} }}]
+}});"""
+    return ""
+
+
+def build_rich_render_html(article_data, date_cn, tag="AI深度解读"):
+    """Build production-grade dark-theme HTML from structured JSON article data."""
+    global _chart_counter
+    _chart_counter = 0
+
+    title = article_data.get("title", "AI热点解读")
+    subtitle = article_data.get("subtitle", "")
+    sections = article_data.get("sections", [])
+
+    # Render all sections
+    section_html_parts = []
+    chart_scripts = []
+
+    for sec in sections:
+        sec_type = sec.get("type", "text")
+        renderer = SECTION_RENDERERS.get(sec_type)
+        if not renderer:
+            continue
+        result = renderer(sec)
+        # Chart renderers return tuple (html, chart_id, sec)
+        if isinstance(result, tuple):
+            html, chart_id, chart_sec = result
+            section_html_parts.append(html)
+            chart_scripts.append(_build_echart_script(chart_id, chart_sec))
+        else:
+            if result:
+                section_html_parts.append(result)
+        # Add divider between sections
+        section_html_parts.append('<div class="divider"></div>')
+
+    # Remove trailing divider
+    if section_html_parts and section_html_parts[-1] == '<div class="divider"></div>':
+        section_html_parts.pop()
+
+    sections_html = "\n".join(section_html_parts)
+
+    # ECharts script block
+    echarts_script = ""
+    if chart_scripts:
+        echarts_script = f'<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>'
+        echarts_init = "\n".join(chart_scripts)
+        echarts_script += f'\n<script>document.addEventListener("DOMContentLoaded", function() {{\n{echarts_init}\n}});</script>'
+
+    return f"""<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=375">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700;900&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+{echarts_script}
+<style>
+{DARK_THEME_CSS}
+</style></head><body>
+<div class="wrapper">
+
+<div class="cover">
+  <div class="cover-grid"></div>
+  <div class="cover-content">
+    <div class="cover-tag">{_esc(tag)}</div>
+    <div class="cover-date">{date_cn} / JK养虾 · Openclaw Agent</div>
+    <h1 class="cover-title">{_esc(title)}</h1>
+    <p class="cover-subtitle">{_md_inline(subtitle)}</p>
+    <div class="cover-brand">JK养虾 · AI深度解读</div>
+  </div>
+</div>
+
+{sections_html}
+
+<div class="article-footer-v4">
+  <p>JK养虾 · Openclaw Agent · {date_cn}</p>
+  <p>关注公众号「JK养虾」每天一篇AI深度解读</p>
+</div>
+
+</div>
+</body></html>"""
+
 
 def build_render_html(title, date_cn, content, tag="AI深度解读"):
     """Build HTML for mobile-viewport screenshot (375px wide, like iPhone)."""
@@ -607,8 +1246,8 @@ def build_diary_page_html(day_num, title, date_cn, content):
 # ============================================================
 # Process one article: cover + screenshot + upload + draft
 # ============================================================
-def process_article(access_token, title, content, digest, theme_idx, tmpdir, tag="AI深度解读"):
-    """Full pipeline for one article. Auto-selects image or text mode."""
+def process_article(access_token, title, content, digest, theme_idx, tmpdir, tag="AI深度解读", is_diary=False):
+    """Full pipeline for one article. V4 hotspot articles use rich dark-theme HTML; diary uses text mode."""
     # 1. Generate cover image (always needed)
     cover_path = os.path.join(tmpdir, f"cover_{theme_idx}.jpg")
     generate_cover_image(title, tag, theme_idx, cover_path)
@@ -622,21 +1261,24 @@ def process_article(access_token, title, content, digest, theme_idx, tmpdir, tag
     if not access_token:
         return None
 
-    # 2. Decide mode: image (screenshot) vs text (inline HTML)
-    use_image_mode = has_complex_visuals(content)
-    mode_label = "IMAGE" if use_image_mode else "TEXT"
-    print(f"  [mode] {mode_label} — {'has data viz elements' if use_image_mode else 'plain text, pushing HTML directly'}")
-
-    if use_image_mode:
-        # IMAGE MODE: render with mobile viewport → screenshot → split → upload images
-        render_html = build_render_html(title, get_date_cn(), content, tag)
-        image_paths = screenshot_and_split(render_html, tmpdir, num_parts=2)
+    # 2. Decide mode based on content type
+    if isinstance(content, dict) and not is_diary:
+        # V4 RICH MODE: JSON article data → dark-theme HTML → screenshot
+        print(f"  [mode] V4 RICH — dark-theme template with {len(content.get('sections', []))} sections")
+        render_html = build_rich_render_html(content, get_date_cn(), tag)
+        image_paths = screenshot_and_split(render_html, tmpdir, num_parts=3, wait_ms=5000)
 
         if not image_paths:
-            print("  [warn] Screenshot failed, falling back to text mode")
-            use_image_mode = False
+            print("  [warn] V4 screenshot failed, falling back to text mode")
+            # Fallback: extract text from sections for text mode
+            text_parts = []
+            for sec in content.get("sections", []):
+                if sec.get("type") == "text":
+                    text_parts.append(sec.get("content", ""))
+            fallback_content = "\n\n".join(text_parts) if text_parts else "内容加载失败"
+            wechat_html = build_wechat_text_html(title, get_date_cn(), f"<p>{fallback_content}</p>", tag)
+            return push_to_wechat_draft(access_token, title, wechat_html, digest, cover_media_id)
 
-    if use_image_mode:
         # Upload content images
         image_urls = []
         for img_path in image_paths:
@@ -648,9 +1290,32 @@ def process_article(access_token, title, content, digest, theme_idx, tmpdir, tag
             return None
 
         wechat_html = build_image_article_html(image_urls)
+    elif isinstance(content, str) and has_complex_visuals(content):
+        # Legacy IMAGE MODE (old-style HTML with data viz)
+        print(f"  [mode] IMAGE — has data viz elements")
+        render_html = build_render_html(title, get_date_cn(), content, tag)
+        image_paths = screenshot_and_split(render_html, tmpdir, num_parts=2)
+
+        if not image_paths:
+            print("  [warn] Screenshot failed, falling back to text mode")
+            wechat_html = build_wechat_text_html(title, get_date_cn(), content, tag)
+            return push_to_wechat_draft(access_token, title, wechat_html, digest, cover_media_id)
+
+        image_urls = []
+        for img_path in image_paths:
+            mid, wx_url = upload_wx_image(access_token, img_path)
+            if wx_url:
+                image_urls.append(wx_url)
+
+        if not image_urls:
+            return None
+
+        wechat_html = build_image_article_html(image_urls)
     else:
-        # TEXT MODE: push inline-styled HTML directly
-        wechat_html = build_wechat_text_html(title, get_date_cn(), content, tag)
+        # TEXT MODE: diary or plain text → inline-styled HTML
+        print(f"  [mode] TEXT — plain text, pushing HTML directly")
+        text_content = content if isinstance(content, str) else str(content)
+        wechat_html = build_wechat_text_html(title, get_date_cn(), text_content, tag)
 
     # 3. Push draft
     return push_to_wechat_draft(access_token, title, wechat_html, digest, cover_media_id)
@@ -665,9 +1330,9 @@ def main():
     date_cn = get_date_cn()
 
     print(f"{'='*55}")
-    print(f"  JK养虾 Auto-Publish Pipeline v3")
+    print(f"  JK养虾 Auto-Publish Pipeline v4")
     print(f"  Day {day_num:03d} | {date_str}")
-    print(f"  Mode: 3 hotspot articles + 1 diary")
+    print(f"  Mode: 3 hotspot articles (JSON→rich HTML) + 1 diary")
     print(f"{'='*55}")
 
     # Step 1: Load hotspots
@@ -689,20 +1354,27 @@ def main():
         print(f"  Topic {i+1}: {t['title']}")
 
     # Step 3: Generate articles
+    # articles list: (title, content, digest, tag, is_diary)
+    # content is dict (JSON) for hotspot articles, str for diary
     print(f"\n--- Step 3: Generate Articles ---")
-    articles = []  # list of (title, content, digest, tag)
+    articles = []
 
     for i, topic in enumerate(topics):
         print(f"\n  [Article {i+1}/3] {topic['title']}")
         content = generate_hotspot_article(topic, hotspots, day_num, date_cn)
         if content:
+            article_title = content.get("title", topic["title"]) if isinstance(content, dict) else topic["title"]
             articles.append((
-                topic['title'],
+                article_title,
                 content,
                 f"AI热点深度解读：{topic['topic'][:30]}",
-                "AI深度解读"
+                "AI深度解读",
+                False,  # is_diary
             ))
-            print(f"  [ok] Generated: {len(content)} chars")
+            if isinstance(content, dict):
+                print(f"  [ok] Generated V4 JSON: {len(content.get('sections', []))} sections")
+            else:
+                print(f"  [ok] Generated (fallback): {len(content)} chars")
         else:
             print(f"  [warn] Generation failed for topic {i+1}")
 
@@ -714,7 +1386,8 @@ def main():
             diary_title,
             diary_content,
             f"Day{day_num} 龙虾COO的工作日志",
-            "龙虾养成日记"
+            "龙虾养成日记",
+            True,  # is_diary
         ))
         print(f"  [ok] Diary: {len(diary_content)} chars")
 
@@ -733,12 +1406,11 @@ def main():
         print("[skip] WeChat push skipped")
     else:
         with tempfile.TemporaryDirectory() as tmpdir:
-            for i, (title, content, digest, tag) in enumerate(articles):
+            for i, (title, content, digest, tag, is_diary) in enumerate(articles):
                 print(f"\n  --- Article {i+1}/{len(articles)}: {title} ---")
-                # Each article gets its own sub-directory to avoid file conflicts
                 art_dir = os.path.join(tmpdir, f"art_{i}")
                 os.makedirs(art_dir)
-                media_id = process_article(access_token, title, content, digest, i, art_dir, tag)
+                media_id = process_article(access_token, title, content, digest, i, art_dir, tag, is_diary=is_diary)
                 if media_id:
                     print(f"  [ok] Pushed to draft: {title}")
                 else:
@@ -748,7 +1420,7 @@ def main():
     print(f"\n{'='*55}")
     print(f"  Pipeline Complete!")
     print(f"  Articles generated: {len(articles)}")
-    for i, (t, _, _, tag) in enumerate(articles):
+    for i, (t, _, _, tag, _) in enumerate(articles):
         print(f"    {i+1}. [{tag}] {t}")
     print(f"{'='*55}")
 
