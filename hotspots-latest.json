@@ -1,10 +1,23 @@
 {
-  "date": "2026-10-11",
-  "updated_at": "2026-10-11T08:36:35.190111+08:00",
+  "date": "2026-10-23",
+  "updated_at": "2026-10-23T08:18:18.198087+08:00",
   "count": 12,
   "hotspots": [
     {
-      "title": "智源发布2026十大AI技术趋势",
+      "title": "Google Gemini vs. OpenAI, Deep",
+      "heat_score": 9,
+      "category": "hotspot",
+      "source": "DeepSeek Gemini AI n"
+    },
+    {
+      "title": "“DeepSeek才是真正的OpenAI”",
+      "heat_score": 8,
+      "category": "hotspot",
+      "source": "微信",
+      "platform": "微信"
+    },
+    {
+      "title": "智源发布2026十大AI技术趋势 - 新华网",
       "heat_score": 8,
       "category": "hotspot",
       "source": "AI最新进展 2026"
@@ -22,19 +35,7 @@
       "source": "OpenAI GPT最新消息"
     },
     {
-      "title": "研究與部署 - OpenAI",
-      "heat_score": 8,
-      "category": "analysis",
-      "source": "OpenAI GPT最新消息"
-    },
-    {
-      "title": "ChatGPT — 版本说明",
-      "heat_score": 8,
-      "category": "hotspot",
-      "source": "OpenAI GPT最新消息"
-    },
-    {
-      "title": "OpenAI News",
+      "title": "GPT-5 正式发布 - OpenAI",
       "heat_score": 8,
       "category": "hotspot",
       "source": "OpenAI GPT最新消息"
@@ -46,13 +47,25 @@
       "source": "OpenAI GPT最新消息"
     },
     {
+      "title": "研究与部署 - OpenAI",
+      "heat_score": 8,
+      "category": "analysis",
+      "source": "OpenAI GPT最新消息"
+    },
+    {
+      "title": "ChatGPT 版本说明",
+      "heat_score": 8,
+      "category": "hotspot",
+      "source": "OpenAI GPT最新消息"
+    },
+    {
       "title": "隆重介紹ChatGPT - OpenAI",
       "heat_score": 8,
       "category": "hotspot",
       "source": "OpenAI GPT最新消息"
     },
     {
-      "title": "GPT-5 正式发布 - OpenAI",
+      "title": "OpenAI - 量子位",
       "heat_score": 8,
       "category": "hotspot",
       "source": "OpenAI GPT最新消息"
@@ -62,18 +75,6 @@
       "heat_score": 8,
       "category": "hotspot",
       "source": "中国AI 人工智能新闻"
-    },
-    {
-      "title": "AI security experts say they u",
-      "heat_score": 8,
-      "category": "hotspot",
-      "source": "OpenAI GPT Claude la"
-    },
-    {
-      "title": "New Claude & GPT Models Just D",
-      "heat_score": 8,
-      "category": "hotspot",
-      "source": "OpenAI GPT Claude la"
     }
   ]
 }

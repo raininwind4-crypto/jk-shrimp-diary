@@ -1,0 +1,80 @@
+{
+  "date": "2026-10-23",
+  "updated_at": "2026-10-23T08:18:18.198087+08:00",
+  "count": 12,
+  "hotspots": [
+    {
+      "title": "Google Gemini vs. OpenAI, Deep",
+      "heat_score": 9,
+      "category": "hotspot",
+      "source": "DeepSeek Gemini AI n"
+    },
+    {
+      "title": "“DeepSeek才是真正的OpenAI”",
+      "heat_score": 8,
+      "category": "hotspot",
+      "source": "微信",
+      "platform": "微信"
+    },
+    {
+      "title": "智源发布2026十大AI技术趋势 - 新华网",
+      "heat_score": 8,
+      "category": "hotspot",
+      "source": "AI最新进展 2026"
+    },
+    {
+      "title": "OpenAI 最新消息",
+      "heat_score": 8,
+      "category": "hotspot",
+      "source": "OpenAI GPT最新消息"
+    },
+    {
+      "title": "OpenAI 新闻",
+      "heat_score": 8,
+      "category": "hotspot",
+      "source": "OpenAI GPT最新消息"
+    },
+    {
+      "title": "GPT-5 正式发布 - OpenAI",
+      "heat_score": 8,
+      "category": "hotspot",
+      "source": "OpenAI GPT最新消息"
+    },
+    {
+      "title": "OpenAI 新聞中心｜最新消息",
+      "heat_score": 8,
+      "category": "hotspot",
+      "source": "OpenAI GPT最新消息"
+    },
+    {
+      "title": "研究与部署 - OpenAI",
+      "heat_score": 8,
+      "category": "analysis",
+      "source": "OpenAI GPT最新消息"
+    },
+    {
+      "title": "ChatGPT 版本说明",
+      "heat_score": 8,
+      "category": "hotspot",
+      "source": "OpenAI GPT最新消息"
+    },
+    {
+      "title": "隆重介紹ChatGPT - OpenAI",
+      "heat_score": 8,
+      "category": "hotspot",
+      "source": "OpenAI GPT最新消息"
+    },
+    {
+      "title": "OpenAI - 量子位",
+      "heat_score": 8,
+      "category": "hotspot",
+      "source": "OpenAI GPT最新消息"
+    },
+    {
+      "title": "年终报道丨“人工智能+”：中国AI开源破局，烟火落地 - 新",
+      "heat_score": 8,
+      "category": "hotspot",
+      "source": "中国AI 人工智能新闻"
+    }
+  ]
+}
